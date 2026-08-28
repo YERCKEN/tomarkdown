@@ -67,6 +67,11 @@ class QueueRunner:
         )
         self._thread.start()
 
+    def join(self, timeout: float | None = None) -> None:
+        """Espera a que termine la cola en curso. No hace nada si no hay ninguna."""
+        if self._thread is not None:
+            self._thread.join(timeout)
+
     def cancel(self) -> None:
         """Marca la bandera de cancelación.
 
