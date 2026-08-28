@@ -1,0 +1,87 @@
+name: Build
+
+# PyInstaller no hace cross compile: el .app sale de macOS y el .exe de Windows.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS
+            artifact: ToMarkdown-macos
+          - os: windows-latest
+            label: Windows
+            artifact: ToMarkdown-windows
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      # web/dist/output.css y las fuentes van versionados, así que el build no
+      # necesita Node en ningún momento.
+      - name: Instalar dependencias
+        run: uv sync --extra dev
+
+      - name: Probar el convertidor y la cola
+        run: |
+          uv run python scripts/smoke_convert.py
+          uv run python scripts/smoke_queue.py
+
+      - name: Empaquetar
+        run: uv run pyinstaller --noconfirm --log-level WARN build.spec
+
+      # Comprueba que el bundle está completo: la conversión carga el modelo
+      # ONNX de magika desde los datos empaquetados. En Windows el ejecutable es
+      # de tipo ventana y no escribe en consola, solo cuenta el código de salida.
+      - name: Verificar el empaquetado (macOS)
+        if: runner.os == 'macOS'
+        run: ./dist/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check
+
+      - name: Verificar el empaquetado (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/ToMarkdown.exe --self-check
+
+      - name: Comprimir (macOS)
+        if: runner.os == 'macOS'
+        run: ditto -c -k --keepParent dist/ToMarkdown.app ${{ matrix.artifact }}.zip
+
+      - name: Comprimir (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ${{ matrix.artifact }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publicar release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true
