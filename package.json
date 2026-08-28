@@ -1,0 +1,17 @@
+{
+  "name": "tomarkdown-web",
+  "private": true,
+  "description": "Herramientas de desarrollo del front de ToMarkdown. No forma parte del bundle.",
+  "scripts": {
+    "fonts": "node scripts/copy-fonts.mjs",
+    "css": "tailwindcss -i web/src/input.css -o web/dist/output.css --minify",
+    "css:watch": "tailwindcss -i web/src/input.css -o web/dist/output.css --watch",
+    "build": "npm run fonts && npm run css"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@tailwindcss/cli": "^4.3.3"
+  }
+}

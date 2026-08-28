@@ -1,0 +1,26 @@
+[project]
+name = "tomarkdown"
+description = "Convierte documentos a Markdown desde una app de escritorio nativa"
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+dependencies = [
+    "pywebview>=6.2.1",
+    "markitdown[pdf,docx,pptx,xlsx,xls,outlook]>=0.1.7",
+]
+
+[project.optional-dependencies]
+dev = ["pyinstaller>=6.16"]
+
+[project.scripts]
+tomarkdown = "app.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "app/config.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

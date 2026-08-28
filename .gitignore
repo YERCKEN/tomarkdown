@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Node (solo herramientas de desarrollo)
+node_modules/
+
+# Salidas de PyInstaller (raiz). web/dist/output.css SI se versiona.
+/build/
+/dist/
+
+# macOS
+.DS_Store
