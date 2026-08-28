@@ -1,4 +1,8 @@
-@import "tailwindcss";
+/* `source(none)` apaga la detección automática de Tailwind y deja solo las dos
+   fuentes declaradas abajo. Sin esto el CSS compilado cambia según lo que haya
+   en el repo —el README, los .md de docs/— y `web/dist/output.css`, que va
+   versionado, deja de ser reproducible. */
+@import "tailwindcss" source(none);
 
 @source "../index.html";
 @source "../app.js";
