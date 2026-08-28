@@ -1,0 +1,257 @@
+@import "tailwindcss";
+
+@source "../index.html";
+@source "../app.js";
+
+/* ------------------------------------------------------------------ fuentes */
+/* Self hosted en web/fonts/. Nada de CDN ni Google Fonts: la app tiene que
+   funcionar con el wifi apagado. Se copian con `npm run fonts`. */
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url("../fonts/space-grotesk-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("../fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../fonts/inter-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url("../fonts/inter-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------- tokens */
+
+@theme {
+  --color-base: #0b0c0e;
+  --color-surface: #131519;
+  --color-raised: #1b1e24;
+  --color-line: #262a31;
+  --color-line-soft: #1d2026;
+
+  --color-ink: #e8eaed;
+  --color-ink-muted: #8b929e;
+  --color-ink-dim: #5c636e;
+
+  --color-primary: #e23d28;
+  --color-primary-hover: #c4311e;
+  --color-primary-dim: #2a1416;
+
+  --color-ok: #3d9970;
+  --color-danger: #e5484d;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+/* ------------------------------------------------------------------- base */
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    /* La ventana es una app, no una página: sin selección accidental ni rebote. */
+    user-select: none;
+    cursor: default;
+    overscroll-behavior: none;
+  }
+
+  /* Foco de teclado visible en todo control interactivo. No se negocia. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-line);
+    border: 3px solid var(--color-base);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-raised);
+  }
+}
+
+/* -------------------------------------------------------------- componentes */
+
+@layer components {
+  .btn {
+    @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-3.5 py-2
+      text-[13px] font-medium whitespace-nowrap transition-colors duration-150;
+  }
+
+  .btn:disabled {
+    @apply opacity-35;
+  }
+
+  /* El rojo se reserva para la acción principal, la barra de progreso y el
+     estado activo. Si está en todos lados deja de significar algo. */
+  .btn-primary {
+    @apply bg-primary text-white;
+  }
+
+  .btn-primary:not(:disabled):hover {
+    @apply bg-primary-hover;
+  }
+
+  .btn-ghost {
+    @apply border border-line text-ink-muted;
+  }
+
+  .btn-ghost:not(:disabled):hover {
+    @apply border-raised bg-raised text-ink;
+  }
+
+  .btn-quiet {
+    @apply text-ink-muted;
+  }
+
+  .btn-quiet:not(:disabled):hover {
+    @apply text-ink;
+  }
+
+  .btn-row {
+    @apply inline-flex shrink-0 items-center rounded border border-line px-2.5 py-1
+      text-[12px] font-medium text-ink-muted transition-colors duration-150;
+  }
+
+  .btn-row:hover {
+    @apply border-raised bg-raised text-ink;
+  }
+
+  .ext-badge {
+    @apply shrink-0 rounded bg-raised px-1.5 py-0.5 text-center font-mono text-[10px]
+      tracking-wide text-ink-muted uppercase;
+    min-width: 40px;
+  }
+
+  /* Nombres de archivo truncados AL MEDIO, para que la extensión siga visible.
+     La cabeza se recorta con elipsis y la cola (últimos caracteres) nunca cede. */
+  .filename {
+    display: flex;
+    min-width: 0;
+    font-family: var(--font-mono);
+  }
+
+  .filename-head {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .filename-tail {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  /* El elemento de firma: la fila activa no lleva una barra encima, se llena
+     ella misma con un lavado rojo tenue que barre en loop. No hay porcentaje
+     real por archivo (markitdown no lo expone), así que tampoco se finge uno. */
+  .row-active {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .row-active::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-primary-dim) 40%,
+      var(--color-primary-dim) 60%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    animation: row-sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    pointer-events: none;
+  }
+
+  .row-active > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes row-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Reemplazo del barrido cuando el sistema pide menos movimiento. */
+  .sweep-dot {
+    display: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background-color: var(--color-primary);
+  }
+}
+
+/* ------------------------------------------------------- movimiento reducido */
+
+@media (prefers-reduced-motion: reduce) {
+  .row-active::before {
+    animation: none;
+    background: var(--color-primary-dim);
+    opacity: 0.55;
+    transform: none;
+  }
+
+  .sweep-dot {
+    display: block;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

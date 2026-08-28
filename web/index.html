@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ToMarkdown</title>
+    <link rel="stylesheet" href="dist/output.css" />
+  </head>
+
+  <body>
+    <div class="flex h-full flex-col">
+      <!-- Barra de título propia ------------------------------------------->
+      <header
+        class="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-5"
+      >
+        <div class="flex items-baseline gap-3">
+          <h1 class="font-display text-[15px] font-bold tracking-tight">ToMarkdown</h1>
+          <span id="header-count" class="font-mono text-[11px] text-ink-dim tabular-nums"></span>
+        </div>
+
+        <button id="btn-clear" type="button" class="btn btn-quiet" disabled>Limpiar</button>
+      </header>
+
+      <main class="flex min-h-0 flex-1 flex-col">
+        <!-- Estado vacío: invitación, no cartel de "sin datos" --------------->
+        <section
+          id="drop-full"
+          class="m-5 flex flex-1 flex-col items-center justify-center gap-5 rounded-lg border border-dashed border-line px-6 py-8 text-center transition-colors duration-150"
+        >
+          <div class="max-w-md">
+            <p class="font-display text-[17px] font-medium text-ink">
+              Arrastra archivos aquí para convertirlos a Markdown
+            </p>
+            <p class="mt-3 text-[13px] text-ink-muted">
+              o
+              <button id="btn-browse-full" type="button" class="btn btn-ghost ml-1 px-3 py-1.5">
+                examinar
+              </button>
+            </p>
+          </div>
+
+          <p
+            id="formats-full"
+            class="max-w-lg font-mono text-[11px] leading-relaxed text-ink-dim"
+          ></p>
+        </section>
+
+        <!-- Con cola cargada, la zona colapsa a una franja delgada ---------->
+        <section
+          id="drop-slim"
+          class="mx-5 mt-4 flex shrink-0 items-center justify-between gap-4 rounded-md border border-dashed border-line px-4 py-2.5 transition-colors duration-150"
+          hidden
+        >
+          <p class="truncate text-[12.5px] text-ink-muted">Arrastra más archivos aquí</p>
+          <button id="btn-browse-slim" type="button" class="btn-row">examinar</button>
+        </section>
+
+        <!-- Aviso de archivos rechazados ------------------------------------>
+        <div
+          id="notice"
+          class="mx-5 mt-3 flex shrink-0 items-start gap-2.5 rounded-md border border-line bg-surface px-3.5 py-2.5"
+          role="status"
+          hidden
+        >
+          <svg
+            class="mt-0.5 size-3.5 shrink-0 text-ink-dim"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <circle cx="8" cy="8" r="6.4" />
+            <path d="M8 5v3.6M8 11h.01" stroke-linecap="round" />
+          </svg>
+          <p id="notice-text" class="text-[12.5px] leading-relaxed text-ink-muted"></p>
+        </div>
+
+        <!-- Cola ------------------------------------------------------------>
+        <ul id="queue" class="mt-4 min-h-0 flex-1 overflow-y-auto" hidden></ul>
+      </main>
+
+      <!-- Barra general y acciones ----------------------------------------->
+      <footer class="shrink-0 border-t border-line px-5 py-3">
+        <div id="progress-row" class="mb-3 flex items-center gap-3.5" hidden>
+          <div class="h-1 flex-1 overflow-hidden rounded-full bg-line-soft">
+            <div
+              id="progress-fill"
+              class="h-full w-0 rounded-full bg-primary transition-[width] duration-300 ease-out"
+            ></div>
+          </div>
+          <span
+            id="progress-label"
+            class="shrink-0 font-mono text-[11.5px] text-ink-muted tabular-nums"
+          ></span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5">
+          <button id="btn-save-all" type="button" class="btn btn-ghost" disabled>
+            Guardar todo
+          </button>
+          <button id="btn-convert" type="button" class="btn btn-primary" disabled>Convertir</button>
+        </div>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
