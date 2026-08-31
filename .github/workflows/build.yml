@@ -1,6 +1,8 @@
 name: Build
 
 # PyInstaller no hace cross compile: el .app sale de macOS y el .exe de Windows.
+# Se dispara con un tag v* (empaqueta y publica el release) o a mano desde la
+# pestaña Actions con "Run workflow" (empaqueta y valida, sin publicar).
 on:
   push:
     tags: ["v*"]
