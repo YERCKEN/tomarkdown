@@ -13,6 +13,9 @@ dependencies = [
 dev = [
     "pyinstaller>=6.16",
     "pytest>=8",
+    # Solo para generar la muestra .xls de --self-check (scripts/gen_selfcheck_samples.py).
+    # markitdown lee .xls con xlrd; xlwt es lo unico que lo escribe.
+    "xlwt>=1.3",
 ]
 
 [project.scripts]

@@ -34,9 +34,14 @@ uv run pytest -k cancel                             # por nombre
 uv run pytest -x --lf                               # frena en el primer fallo / solo los que fallaron
 ```
 
-Aparte, `--self-check` convierte una muestra sin abrir la ventana; CI lo corre
-sobre el binario ya empaquetado (ejercita la carga del modelo ONNX de magika
-desde los datos del bundle). CI: `pytest` → empaquetar → `--self-check`.
+`ci.yml` corre `pytest` en cada push a `develop`/`main` y en cada PR.
+
+Aparte, `--self-check` importa los módulos de los converters (`CONVERTER_IMPORTS`
+en `config.py`, lo que va a `hiddenimports`) y convierte una muestra sin abrir la
+ventana; `scripts/gen_selfcheck_samples.py` arma una carpeta con un archivo
+mínimo de cada formato pesado. CI lo corre sobre el binario ya empaquetado.
+`build.yml` en un tag: validar versión → `pytest` → empaquetar → generar
+muestras → `--self-check <carpeta>`.
 
 ### Front (solo si tocas el CSS)
 
@@ -64,11 +69,12 @@ dispara con tags `v*`.
 ### Verificar un bundle
 
 ```bash
-/Applications/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check [archivo1 archivo2 ...]
+/Applications/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check [archivo | carpeta ...]
 ```
 
-Convierte sin abrir la ventana (ejercita la carga del modelo ONNX de magika
-desde los datos empaquetados). Sin argumentos usa una muestra interna.
+Sin abrir la ventana: importa `CONVERTER_IMPORTS` y convierte. Sin argumentos usa
+una muestra de texto interna (ejercita la carga del modelo ONNX de magika); con
+una carpeta convierte cada archivo que tenga dentro.
 
 ## Arquitectura
 
@@ -140,12 +146,13 @@ el archivo soltado y el usuario se sale de la app.
 - **markitdown con extras acotados**: `[pdf,docx,pptx,xlsx,xls,outlook]`, nunca
   `[all]` (arrastra audio/transcripción, cientos de MB).
 - **Agregar un formato** = editar el dict `SUPPORTED_EXTENSIONS` en `config.py`
-  (y, si el converter trae una dep nueva, sumarla a `hiddenimports` en
-  `build.spec`). El front pide la lista al arrancar con `get_supported_extensions()`.
+  (y, si el converter trae una dep nueva, sumarla a `CONVERTER_IMPORTS` en
+  `config.py` y, si se puede generar, a `scripts/gen_selfcheck_samples.py`). El
+  front pide la lista al arrancar con `get_supported_extensions()`.
 - **`build.spec`**: bundlea el modelo ONNX de `magika` y las dylibs de
-  `onnxruntime`; declara a mano los `hiddenimports` que los converters de
-  markitdown importan dentro de try/except; `excludes` corta audio, notebooks y
-  librería científica que se cuela por pandas.
+  `onnxruntime`; `hiddenimports = [*CONVERTER_IMPORTS, "magika", "onnxruntime"]`
+  (la lista de converters vive en `config.py`, la comparte `--self-check`);
+  `excludes` corta audio, notebooks y librería científica que se cuela por pandas.
 - **Logging**: usar `logging` (ya configurado en `_setup_logging`), nunca
   `print` en código de app. `_setup_logging` cae a `NullHandler` cuando
   `sys.stderr is None` (el `.exe` de Windows es windowed). Mensajes con prefijo

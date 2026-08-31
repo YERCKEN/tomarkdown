@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from pathlib import Path
 
 import webview
 from webview.dom import DOMEventHandler
@@ -77,29 +78,69 @@ def _make_drag_binder(api: Api):
     return on_loaded
 
 
-def _self_check(paths: list[str]) -> int:
-    """Convierte sin abrir la ventana, para comprobar que el empaquetado está completo.
+def _expand_paths(paths: list[str]) -> list[str]:
+    """Expande las carpetas a los archivos que contienen, ordenados.
 
-    Sin argumentos usa una muestra propia, que ya ejercita la parte frágil del
-    bundle: la detección de tipo de markitdown carga el modelo ONNX de magika
-    desde los datos empaquetados. Con argumentos convierte esos archivos.
-
-    :param paths: Rutas a convertir. Vacío para usar la muestra interna.
-    :returns: Código de salida, 0 si todo convirtió.
+    Las rutas que ya son archivos pasan sin cambios. Sirve para que
+    `--self-check` acepte la carpeta de muestras que arma
+    `scripts/gen_selfcheck_samples.py` sin depender del glob del shell.
     """
+    expanded: list[str] = []
+    for path in paths:
+        if os.path.isdir(path):
+            expanded.extend(str(entry) for entry in sorted(Path(path).iterdir()) if entry.is_file())
+        else:
+            expanded.append(path)
+    return expanded
+
+
+def _self_check(paths: list[str]) -> int:
+    """Comprueba sin abrir la ventana que el empaquetado está completo.
+
+    Dos fases:
+
+    1. Importa los módulos que los converters de markitdown cargan de forma
+       diferida (``CONVERTER_IMPORTS``). En un bundle mal armado esto es lo que
+       falla aunque en desarrollo funcione siempre.
+    2. Convierte archivos. Sin argumentos usa una muestra de texto propia (que
+       ya ejercita la carga del modelo ONNX de magika); con una carpeta,
+       convierte cada archivo que tenga dentro.
+
+    :param paths: Rutas o carpetas a convertir. Vacío para usar la muestra interna.
+    :returns: Código de salida, 0 si todo pasó.
+    """
+    import importlib
     import tempfile
 
+    from app.config import CONVERTER_IMPORTS
     from app.converter import ConversionError, convert
 
+    failures = 0
+
+    print("Módulos de los converters:")
+    for name in CONVERTER_IMPORTS:
+        try:
+            importlib.import_module(name)
+        except Exception as exc:  # noqa: BLE001 - se reporta cualquier fallo de import
+            failures += 1
+            print(f"  ✗ import {name}: {exc}")
+        else:
+            print(f"  ✓ import {name}")
+
+    print("Conversión:")
     with tempfile.TemporaryDirectory() as tmp:
         if not paths:
             sample = os.path.join(tmp, "prueba.txt")
             with open(sample, "w", encoding="utf-8") as handle:
                 handle.write("# Prueba\n\nTexto con acentos: ñ á é\n")
-            paths = [sample]
+            targets = [sample]
+        else:
+            targets = _expand_paths(paths)
+            if not targets:
+                failures += 1
+                print("  ✗ no hay archivos para convertir en esas rutas")
 
-        failures = 0
-        for path in paths:
+        for path in targets:
             try:
                 markdown = convert(path)
             except ConversionError as exc:
@@ -109,7 +150,7 @@ def _self_check(paths: list[str]) -> int:
                 print(f"  ✓ {os.path.basename(path)}: {len(markdown)} caracteres")
 
     if failures:
-        print(f"\n🔴 {failures} archivos fallaron")
+        print(f"\n🔴 {failures} comprobaciones fallaron")
         return 1
 
     print(f"\n✅ {APP_NAME} {__version__} convierte correctamente")
