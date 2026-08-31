@@ -78,15 +78,39 @@ jobs:
         if: runner.os == 'Windows'
         run: ./dist/ToMarkdown.exe --self-check "${{ runner.temp }}/samples"
 
-      - name: Comprimir (macOS)
+      - name: Leer la versión
+        id: version
+        shell: bash
+        run: echo "value=$(uv run python -c 'import app.config; print(app.config.__version__)')" >> "$GITHUB_OUTPUT"
+
+      # macOS: un .dmg con alias a /Applications es lo que se espera para
+      # instalar; el .app suelto dentro de un zip se descarta. Se arma con
+      # hdiutil y no con create-dmg: este último posiciona los iconos con
+      # AppleScript sobre Finder, que en un runner headless se cuelga.
+      - name: Empaquetar .dmg (macOS)
         if: runner.os == 'macOS'
-        run: ditto -c -k --keepParent dist/ToMarkdown.app ${{ matrix.artifact }}.zip
+        run: |
+          dmg="ToMarkdown-${{ steps.version.outputs.value }}.dmg"
+          staging="$(mktemp -d)"
+          cp -R dist/ToMarkdown.app "$staging/"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname "ToMarkdown" -srcfolder "$staging" -ov -format UDZO "$dmg"
 
       - name: Comprimir (Windows)
         if: runner.os == 'Windows'
         run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ${{ matrix.artifact }}.zip
 
-      - uses: actions/upload-artifact@v4
+      - name: Publicar artefacto (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ToMarkdown-*.dmg
+          if-no-files-found: error
+
+      - name: Publicar artefacto (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}.zip
@@ -105,5 +129,6 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.zip
+          files: artifacts/*
+          fail_on_unmatched_files: true
           generate_release_notes: true
