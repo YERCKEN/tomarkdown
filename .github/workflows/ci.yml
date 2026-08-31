@@ -1,0 +1,35 @@
+name: CI
+
+# Corre en cada push a develop/main y en cada pull request, para que un test
+# roto quede en rojo antes de mergear. El empaquetado y la publicación viven en
+# build.yml, que se dispara con tags v*.
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      # web/dist/output.css y las fuentes van versionados: el build no necesita
+      # Node y los tests tampoco.
+      - name: Instalar dependencias
+        run: uv sync --extra dev
+
+      - name: Pruebas
+        run: uv run pytest
+
+      # Humo sin empaquetar: verifica que los módulos de los converters importan
+      # y que la muestra de texto convierte. El --self-check sobre el binario
+      # real lo corre build.yml.
+      - name: Self-check
+        run: uv run python -m app.main --self-check
