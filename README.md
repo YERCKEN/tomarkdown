@@ -276,7 +276,9 @@ Para reemplazar el icono por defecto de PyInstaller por uno propio, ver
 Para el release, [`build.yml`](.github/workflows/build.yml) empaqueta el `.app`
 en un `.dmg` (con `hdiutil` y un alias a `/Applications`) y el `.exe` en un
 instalador de Inno Setup ([`packaging/windows/installer.iss`](packaging/windows/installer.iss)),
-más un zip portable del `.exe`.
+más un zip portable del `.exe`. El paso a paso para cortar un release y el
+checklist de verificación en máquina limpia están en
+[Publicar y verificar un release](docs/guias/verificar-el-release.md).
 
 > [!WARNING]
 > PyInstaller no hace cross compile. El `.app` solo sale desde macOS y el `.exe`
