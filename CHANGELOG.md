@@ -9,6 +9,26 @@ líneas pasan a una sección con número y fecha.
 
 ## [Unreleased]
 
+### Added
+
+- Workflow `ci.yml`: `pytest` en cada push a `develop`/`main` y en cada pull
+  request.
+- `build.yml` valida, en un tag, que `vX.Y.Z` coincide con `__version__`.
+- `--self-check` importa los módulos de los converters (`CONVERTER_IMPORTS`) y
+  acepta carpetas; `scripts/gen_selfcheck_samples.py` arma una muestra mínima de
+  cada formato pesado y CI corre `--self-check` del binario contra ella.
+- `scripts/bump_version.py`: sube `__version__`, y deja el commit y el tag de
+  release listos (sin push).
+- Guía [Publicar y verificar un release](docs/guias/verificar-el-release.md) con
+  el checklist de instalación en máquina limpia.
+
+### Changed
+
+- El release de macOS es un `.dmg` (con alias a `/Applications`) en vez de un zip
+  con el `.app` suelto.
+- El release de Windows suma un instalador de Inno Setup
+  (`packaging/windows/installer.iss`) junto al zip portable del `.exe`.
+
 ## [0.1.0] - 2026-08-31
 
 Primera versión publicada.
