@@ -7,6 +7,16 @@ Se instala, se abre con doble clic y se usa sin terminal, sin navegador y sin
 conexión a internet. Arrastras archivos, ves la cola convertirse uno por uno y
 guardas los `.md` donde quieras.
 
+<!--
+TODO #14 — capturas de la UI. Guardarlas en docs/images/ y descomentar:
+
+| Cola vacía | Conversión en curso | Resultado |
+|---|---|---|
+| ![Cola vacía](docs/images/cola-vacia.png) | ![Conversión en curso](docs/images/convirtiendo.png) | ![Resultado](docs/images/resultado.png) |
+
+![Flujo: arrastrar, convertir, guardar](docs/images/flujo.gif)
+-->
+
 > [!NOTE]
 > No es un servicio web. No hay backend HTTP propio, ni puertos expuestos hacia
 > afuera, ni telemetría. Todo ocurre en tu máquina.
