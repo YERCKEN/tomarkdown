@@ -12,48 +12,17 @@ from typing import Callable
 import pytest
 
 from app.queue_runner import QueueRunner
-
-
-def _minimal_pdf(text: str) -> bytes:
-    """Arma un PDF válido mínimo con una línea de texto.
-
-    Evita depender de una librería de escritura de PDF solo para las pruebas. La
-    tabla xref lleva los desplazamientos reales, así pdfminer lo lee sin
-    reconstruirla.
-    """
-    stream = f"BT /F1 14 Tf 24 120 Td ({text}) Tj ET".encode("latin-1")
-    objects = [
-        b"<</Type/Catalog/Pages 2 0 R>>",
-        b"<</Type/Pages/Kids[3 0 R]/Count 1>>",
-        b"<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]"
-        b"/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>",
-        b"<</Length " + str(len(stream)).encode() + b">>stream\n" + stream + b"\nendstream",
-        b"<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
-    ]
-
-    out = bytearray(b"%PDF-1.4\n")
-    offsets: list[int] = []
-    for index, body in enumerate(objects, start=1):
-        offsets.append(len(out))
-        out += f"{index} 0 obj\n".encode() + body + b"\nendobj\n"
-
-    xref_at = len(out)
-    out += f"xref\n0 {len(objects) + 1}\n".encode()
-    out += b"0000000000 65535 f \n"
-    for offset in offsets:
-        out += f"{offset:010d} 00000 n \n".encode()
-    out += (
-        f"trailer<</Size {len(objects) + 1}/Root 1 0 R>>\n"
-        f"startxref\n{xref_at}\n%%EOF\n"
-    ).encode()
-
-    return bytes(out)
+from scripts.gen_selfcheck_samples import minimal_pdf
 
 
 @pytest.fixture
 def make_pdf() -> Callable[[str], bytes]:
-    """Devuelve la función que arma un PDF válido mínimo con una línea de texto."""
-    return _minimal_pdf
+    """Devuelve la función que arma un PDF válido mínimo con una línea de texto.
+
+    Es `minimal_pdf` de `scripts/gen_selfcheck_samples.py`: la misma que usa
+    `--self-check`, para no mantener dos armadores de PDF.
+    """
+    return minimal_pdf
 
 
 @pytest.fixture

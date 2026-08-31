@@ -79,14 +79,15 @@ binario sin firmar: **Más información** → **Ejecutar de todas formas**.
 
 ### Verificar que la instalación quedó completa
 
-El ejecutable acepta `--self-check`: convierte una muestra sin abrir la ventana
-y sale con código 0 si el empaquetado está bien.
+El ejecutable acepta `--self-check`: sin abrir la ventana, comprueba que los
+componentes de los conversores están en el paquete y convierte una muestra. Sale
+con código 0 si todo está bien.
 
 ```bash
 # macOS
 /Applications/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check
 
-# con tus propios archivos
+# con tus propios archivos o una carpeta
 /Applications/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check informe.pdf notas.docx
 ```
 

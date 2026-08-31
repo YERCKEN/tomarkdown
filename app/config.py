@@ -44,6 +44,23 @@ SUPPORTED_EXTENSIONS: dict[str, str] = {
 }
 
 
+#: Modulos que los converters de markitdown importan de forma diferida (dentro
+#: de try/except). El analisis estatico de PyInstaller no los ve, por eso van
+#: como `hiddenimports` en `build.spec`, y `--self-check` verifica que el bundle
+#: los incluye. Fuente unica: la lee `build.spec` y `app/main.py`.
+CONVERTER_IMPORTS: tuple[str, ...] = (
+    "mammoth",
+    "olefile",
+    "openpyxl",
+    "pandas",
+    "pdfminer",
+    "pdfminer.high_level",
+    "pdfplumber",
+    "pptx",
+    "xlrd",
+)
+
+
 def supported_extensions() -> list[str]:
     """Devuelve las extensiones soportadas, ordenadas y sin duplicados."""
     return sorted(SUPPORTED_EXTENSIONS)

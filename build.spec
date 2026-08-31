@@ -21,7 +21,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 ROOT = Path(SPECPATH)  # noqa: F821 - PyInstaller lo inyecta
 sys.path.insert(0, str(ROOT))
 
-from app.config import APP_ID, APP_NAME, __version__  # noqa: E402
+from app.config import APP_ID, APP_NAME, CONVERTER_IMPORTS, __version__  # noqa: E402
 
 IS_MACOS = sys.platform == "darwin"
 
@@ -52,20 +52,10 @@ datas += collect_data_files("magika")
 binaries = collect_dynamic_libs("onnxruntime")
 
 # Dependencias que los converters de markitdown importan dentro de try/except.
-# Se declaran a mano para que el análisis estático no las descarte.
-hiddenimports = [
-    "mammoth",
-    "olefile",
-    "openpyxl",
-    "pandas",
-    "pdfminer",
-    "pdfminer.high_level",
-    "pdfplumber",
-    "pptx",
-    "xlrd",
-    "magika",
-    "onnxruntime",
-]
+# Se declaran a mano para que el análisis estático no las descarte. La lista de
+# converters vive en app/config.py (la comparte --self-check); magika y
+# onnxruntime son del núcleo de markitdown.
+hiddenimports = [*CONVERTER_IMPORTS, "magika", "onnxruntime"]
 
 # markitdown[all] arrastraría audio y transcripción; acá además se cortan las
 # librerías científicas y de notebooks que se cuelan por pandas.

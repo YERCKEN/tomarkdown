@@ -60,16 +60,23 @@ jobs:
       - name: Empaquetar
         run: uv run pyinstaller --noconfirm --log-level WARN build.spec
 
-      # Comprueba que el bundle está completo: la conversión carga el modelo
-      # ONNX de magika desde los datos empaquetados. En Windows el ejecutable es
-      # de tipo ventana y no escribe en consola, solo cuenta el código de salida.
+      # Comprueba que el bundle está completo: --self-check importa los módulos
+      # de los converters (los hiddenimports de build.spec) y convierte una
+      # muestra de cada formato pesado. Si falta una dependencia en el bundle,
+      # este paso queda en rojo aunque en desarrollo funcione. En Windows el
+      # ejecutable es de tipo ventana y no escribe en consola: solo cuenta el
+      # código de salida.
+      - name: Generar muestras de todos los formatos
+        shell: bash
+        run: uv run python scripts/gen_selfcheck_samples.py "${{ runner.temp }}/samples"
+
       - name: Verificar el empaquetado (macOS)
         if: runner.os == 'macOS'
-        run: ./dist/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check
+        run: ./dist/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check "${{ runner.temp }}/samples"
 
       - name: Verificar el empaquetado (Windows)
         if: runner.os == 'Windows'
-        run: ./dist/ToMarkdown.exe --self-check
+        run: ./dist/ToMarkdown.exe --self-check "${{ runner.temp }}/samples"
 
       - name: Comprimir (macOS)
         if: runner.os == 'macOS'

@@ -8,9 +8,10 @@ release.
 graph TD;
     PT["pytest · tests/"] --> CONV["converter<br/>(errores + formatos reales)"];
     PT --> QR["queue_runner<br/>(orden, error, cancelación)"];
-    PT --> HELP["helpers de api / config"];
-    SELF["--self-check<br/>(sobre el binario)"] --> MAGIKA["modelo ONNX de magika<br/>desde los datos del bundle"];
-    CI["CI · build.yml"] --> PT;
+    PT --> HELP["helpers de api / config / main"];
+    SELF["--self-check<br/>(sobre el binario)"] --> IMP["importa CONVERTER_IMPORTS"];
+    SELF --> SAMPLES["convierte una muestra<br/>de cada formato"];
+    CI["CI"] --> PT;
     CI --> SELF;
 ```
 
@@ -47,12 +48,13 @@ compartidos. Sin `__init__.py` (pytest los descubre por nombre).
 | `test_queue_runner.py` | `QueueRunner`: procesa en orden y un archivo con error no detiene la cola; cancelar deja terminar el archivo en curso y marca el resto `cancelled`; no reprocesa lo que ya estaba `done`. |
 | `test_api.py` | Helpers puros de `api.py`: `_extension`, `_first_path`, `_all_paths`, `_unique_md_path`. |
 | `test_config.py` | `supported_extensions()` y `file_dialog_filter()`. |
+| `test_main.py` | `_expand_paths` (carpeta → archivos ordenados) y `_self_check` (ok con una carpeta de muestras, falla con un archivo roto o una carpeta vacía); que cada nombre de `CONVERTER_IMPORTS` importe. |
 
 ### Fixtures (`conftest.py`)
 
 | Fixture | Da |
 |---|---|
-| `make_pdf` | Una función `(texto) -> bytes` que arma un PDF válido mínimo, sin depender de una librería de PDF. |
+| `make_pdf` | La función `minimal_pdf` de `scripts/gen_selfcheck_samples.py`: `(texto) -> bytes` con un PDF válido mínimo, sin depender de una librería de PDF. |
 | `make_entries` | Una función `(n) -> dict` con `n` entradas de cola sintéticas ya normalizadas. |
 | `run_queue` | Arranca `QueueRunner` con un `convert` falso (parchea `app.queue_runner.convert` con `monkeypatch`), recoge los eventos y permite un callback `during` entre el `start` y el `join` — así la cancelación se prueba en un punto exacto. |
 
@@ -92,16 +94,24 @@ def test_extension_ignora_mayusculas():
 ```bash
 uv run python -m app.main --self-check
 # o, sobre un bundle ya construido:
-./dist/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check [archivo ...]
+./dist/ToMarkdown.app/Contents/MacOS/ToMarkdown --self-check [archivo | carpeta ...]
 ```
 
-Convierte sin abrir la ventana. Sin argumentos usa una muestra de texto interna;
-con argumentos convierte esos archivos.
+Sin abrir la ventana, hace dos cosas:
 
-Su valor está en el **binario empaquetado**: ejercita la parte frágil del
-bundle, que es la carga del modelo ONNX de `magika` (la detección de tipo de
-markitdown) desde los datos que empaqueta `build.spec`. Eso funciona siempre en
+1. **Importa** cada módulo de `CONVERTER_IMPORTS` (`app/config.py`), que son los
+   que `build.spec` declara como `hiddenimports` porque los converters de
+   markitdown los cargan dentro de un `try/except`. Cubre `.msg` / `olefile`,
+   que no se puede generar como muestra.
+2. **Convierte** archivos. Sin argumentos, una muestra de texto interna (que ya
+   ejercita la carga del modelo ONNX de `magika`). Con una carpeta, cada archivo
+   que tenga dentro.
+
+Su valor está en el **binario empaquetado**: todo esto funciona siempre en
 desarrollo y es lo que se rompe en un `.app` mal armado.
+`scripts/gen_selfcheck_samples.py <carpeta>` arma una muestra mínima de cada
+formato pesado (`pdf`, `docx`, `xlsx`, `xls`, `pptx`, …); CI genera esa carpeta
+y corre `--self-check` del binario contra ella.
 
 En Windows el ejecutable es de tipo ventana y no escribe en consola: ahí solo
 cuenta el código de salida.
@@ -125,7 +135,8 @@ tag `v*` y en cada runner de la matriz (`macos-latest`, `windows-latest`):
    `app.config.__version__`.
 2. `uv run pytest` — antes de empaquetar.
 3. `pyinstaller --noconfirm build.spec`.
-4. `--self-check` sobre el binario recién construido.
+4. `--self-check` del binario recién construido contra la carpeta de muestras
+   que arma `scripts/gen_selfcheck_samples.py`.
 
 Si cualquiera falla, no se publica el release.
 
