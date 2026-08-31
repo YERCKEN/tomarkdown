@@ -79,8 +79,15 @@ Para abrirlo la primera vez, cualquiera de las dos:
 
 ### Windows
 
-Descomprime y ejecuta `ToMarkdown.exe`. SmartScreen puede avisar por ser un
-binario sin firmar: **Más información** → **Ejecutar de todas formas**.
+Dos opciones:
+
+- **Instalador** (`ToMarkdown-Setup-x.y.z.exe`): instala en Archivos de
+  programa, agrega acceso en el menú inicio y un desinstalador.
+- **Portable** (`ToMarkdown-x.y.z-portable.zip`): descomprime y ejecutá
+  `ToMarkdown.exe`, sin instalar nada.
+
+En ambos casos, al ser un binario sin firmar SmartScreen puede avisar:
+**Más información** → **Ejecutar de todas formas**.
 
 ### Verificar que la instalación quedó completa
 
@@ -267,7 +274,9 @@ Para reemplazar el icono por defecto de PyInstaller por uno propio, ver
 [Cambiar el icono de la app](docs/guias/cambiar-el-icono.md).
 
 Para el release, [`build.yml`](.github/workflows/build.yml) empaqueta el `.app`
-en un `.dmg` (con `hdiutil` y un alias a `/Applications`).
+en un `.dmg` (con `hdiutil` y un alias a `/Applications`) y el `.exe` en un
+instalador de Inno Setup ([`packaging/windows/installer.iss`](packaging/windows/installer.iss)),
+más un zip portable del `.exe`.
 
 > [!WARNING]
 > PyInstaller no hace cross compile. El `.app` solo sale desde macOS y el `.exe`
