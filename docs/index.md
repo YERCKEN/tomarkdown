@@ -14,6 +14,18 @@ entrada es el [README](../README.md).
 
 ---
 
+## Guías
+
+| Guía | Qué resuelve |
+|---|---|
+| [Cambiar el icono de la app](guias/cambiar-el-icono.md) | Reemplazar el icono por defecto de PyInstaller en el `.app` y el `.exe` |
+| [Pruebas](guias/pruebas.md) | Cómo se corre `pytest`, qué cubre `tests/` y `--self-check`, y cómo agregar un test |
+
+Cómo arrancar la app en desarrollo (terminal o VSCode) está en el
+[README](../README.md#desarrollo).
+
+---
+
 ## Mapa rápido
 
 ```mermaid
@@ -32,6 +44,9 @@ mindmap
     Empaquetado
       build.spec
       GitHub Actions
+    Guías
+      Icono de la app
+      Pruebas
 ```
 
 ---

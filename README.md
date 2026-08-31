@@ -154,17 +154,43 @@ fijo.
 Requisitos: [uv](https://docs.astral.sh/uv/), Python 3.12 y Node solo si vas a
 tocar el CSS.
 
-```bash
-uv sync --extra dev          # dependencias de Python
-uv run python -m app.main    # abre la ventana
-```
+### Ejecutar la app
 
-Con `TOMARKDOWN_DEBUG=1` se activan las devtools del WebView y el log en nivel
-`DEBUG`:
+**Desde la terminal:**
+
+1. Instala las dependencias de Python. Una sola vez: crea `.venv/` con todo.
+
+   ```bash
+   uv sync --extra dev
+   ```
+
+2. Abre la ventana.
+
+   ```bash
+   uv run python -m app.main
+   ```
+
+Para depurar, `TOMARKDOWN_DEBUG=1` activa las devtools del WebView y sube el log
+a nivel `DEBUG`:
 
 ```bash
 TOMARKDOWN_DEBUG=1 uv run python -m app.main
 ```
+
+**Desde VSCode:**
+
+1. Acepta la extensión **Python** (`ms-python.python`) que VSCode ofrece al
+   abrir el proyecto —la sugiere `.vscode/extensions.json`—.
+2. Corre `uv sync --extra dev` una vez. La extensión toma `.venv/` sola como
+   intérprete.
+3. **F5**. `.vscode/launch.json` trae dos configuraciones: **ToMarkdown** y
+   **ToMarkdown (debug WebView)**, esta última con `TOMARKDOWN_DEBUG=1`.
+
+> [!NOTE]
+> Corriendo desde el código la app se ejecuta bajo el intérprete de Python, así
+> que el Dock y el Finder la muestran como «Python». El icono y el nombre
+> propios solo aplican al binario empaquetado: ver
+> [Cambiar el icono de la app](docs/guias/cambiar-el-icono.md).
 
 ### Front
 
@@ -180,22 +206,24 @@ npm run css:watch    # el anterior, en modo watch
 
 ### Pruebas
 
-Dos pruebas de humo, sin GUI y sin dependencias de test. Las dos corren en CI
-antes de empaquetar.
+`pytest`, sin GUI, deterministas. Corren en CI antes de empaquetar.
 
 ```bash
-uv run python scripts/smoke_convert.py   # convertidor, formato por formato
-uv run python scripts/smoke_queue.py     # contrato del hilo de la cola
+uv run pytest              # todo
+uv run pytest -k queue     # por nombre
 ```
 
-`smoke_convert.py` genera muestras de diez formatos y las convierte, incluyendo
-a propósito un PDF truncado para comprobar que el error se traduce a un mensaje
-legible en vez de tumbar la cola.
+`tests/` cubre el convertidor (traducción de errores y conversión real formato
+por formato, con un PDF roto a propósito), el hilo de la cola (`QueueRunner`:
+orden serial, un error que no la detiene, cancelación limpia) y los helpers
+puros de `api.py` y `config.py`.
 
-`smoke_queue.py` prueba `QueueRunner` con un convertidor falso controlado por
-eventos: orden serial, un error que no detiene la cola, y la cancelación
-—el archivo en curso termina, los pendientes pasan a `cancelled`— de forma
-determinista, sin depender de cuánto tarde un archivo real.
+Aparte, el ejecutable acepta `--self-check`: convierte una muestra sin abrir la
+ventana. Sirve para verificar un bundle ya empaquetado (ver
+[Empaquetado](#empaquetado)).
+
+El detalle —fixtures, cómo correr un solo caso, cómo agregar un test— está en
+[Pruebas](docs/guias/pruebas.md).
 
 ### Estructura
 
@@ -206,6 +234,7 @@ app/
 ├── queue_runner.py  # hilo serial y emisión de eventos
 ├── api.py           # superficie expuesta al JavaScript
 └── main.py          # ventana, arranque y --self-check
+tests/               # pytest: un test_<módulo>.py por módulo de app/
 web/
 ├── index.html
 ├── app.js           # todo el estado en un solo objeto
@@ -226,6 +255,9 @@ uv run pyinstaller --noconfirm build.spec
 |---|---|---|
 | macOS | one folder dentro de un `.app` | `dist/ToMarkdown.app` |
 | Windows | one file | `dist/ToMarkdown.exe` |
+
+Para reemplazar el icono por defecto de PyInstaller por uno propio, ver
+[Cambiar el icono de la app](docs/guias/cambiar-el-icono.md).
 
 > [!WARNING]
 > PyInstaller no hace cross compile. El `.app` solo sale desde macOS y el `.exe`
@@ -325,4 +357,26 @@ Anotado a propósito, para no meterlo sin querer:
 
 ## Licencia
 
-MIT.
+El código de ToMarkdown está bajo **MIT** (ver [`LICENSE`](LICENSE)). Se puede
+usar, modificar, redistribuir y publicar sin pedir permiso.
+
+### Dependencias
+
+[microsoft/markitdown](https://github.com/microsoft/markitdown) y el resto de las
+librerías de Python son todas de licencia permisiva (MIT, BSD, Apache-2.0, PSF).
+Ninguna obliga a que ToMarkdown sea open source ni impone condiciones a su
+distribución, más allá de mantener sus avisos de copyright.
+
+El binario empaquetado **incluye** esas librerías, así que trae un
+`THIRD-PARTY-LICENSES.md` con el aviso de cada una. Ese archivo lo genera
+`build.spec` al empaquetar (con `scripts/gen_licenses.py`) y no se versiona.
+
+### Assets del front
+
+Van inline en el repo, porque la app tiene que funcionar sin conexión.
+
+| Recurso | Dónde | Licencia |
+|---|---|---|
+| Iconos de [Lucide](https://lucide.dev) | `web/icons.js` | ISC |
+| [Marca de Markdown](https://github.com/dcurtis/markdown-mark) | `web/icons.js`, `assets/icon.svg` | CC0 1.0 |
+| [Inter](https://rsms.me/inter/), [Space Grotesk](https://fonts.floriankarsten.com/space-grotesk), [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | `web/fonts/` | SIL OFL 1.1 |
