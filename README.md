@@ -22,6 +22,7 @@ guardas los `.md` donde quieras.
 - [Empaquetado](#empaquetado)
 - [Decisiones técnicas](#decisiones-técnicas)
 - [Fuera de alcance](#fuera-de-alcance)
+- [Changelog](#changelog)
 
 Documentación técnica más a fondo en [`docs/`](docs/index.md): la
 [arquitectura](docs/arquitectura/overview.md) y el
@@ -352,6 +353,14 @@ Anotado a propósito, para no meterlo sin querer:
 - Historial de conversiones
 - Auto update
 - Configuración persistente
+
+---
+
+## Changelog
+
+El historial de versiones está en [`CHANGELOG.md`](CHANGELOG.md), con formato
+[Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Cada cambio
+relevante que entra a `develop` suma una línea en `[Unreleased]`.
 
 ---
 

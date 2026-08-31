@@ -171,3 +171,7 @@ el archivo soltado y el usuario se sale de la app.
 - **Commits**: Conventional Commits con scope (`feat(web)`, `fix(api)`, `docs`,
   `build`, `test`, `chore`). Proyecto personal: mensajes simples, sin ISSUE-KEY,
   **sin trailer de co-autor**.
+- **Changelog**: cada cambio relevante suma una línea a `[Unreleased]` en
+  [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog + SemVer). `scripts/bump_version.py`
+  crea el commit y el tag de release; mover `[Unreleased]` a la sección con
+  número queda a mano.
