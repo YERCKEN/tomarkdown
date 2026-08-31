@@ -12,6 +12,7 @@ matriz con los dos runners.
 Uso: uv run pyinstaller build.spec
 """
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,9 +25,24 @@ from app.config import APP_ID, APP_NAME, __version__  # noqa: E402
 
 IS_MACOS = sys.platform == "darwin"
 
+# Icono propio del binario. Se toma solo si el archivo existe, así el build
+# sigue funcionando sin `assets/` (usa el icono por defecto de PyInstaller).
+# Cómo generarlos: docs/guias/cambiar-el-icono.md
+_icns = ROOT / "assets" / "icon.icns"
+_ico = ROOT / "assets" / "icon.ico"
+ICON_MAC = str(_icns) if _icns.exists() else None
+ICON_WIN = str(_ico) if _ico.exists() else None
+
 # El front completo: index.html, el CSS compilado y las fuentes woff2. Sin esto
 # la ventana abre en blanco.
 datas = [(str(ROOT / "web"), "web")]
+
+# Avisos de licencia de las librerías que el bundle incluye (MIT / BSD /
+# Apache-2.0 / PSF piden mantener el aviso al redistribuir). Se genera acá y no
+# se versiona: refleja lo que hay instalado al momento de empaquetar.
+_licenses = ROOT / "THIRD-PARTY-LICENSES.md"
+subprocess.run([sys.executable, str(ROOT / "scripts" / "gen_licenses.py")], check=True)
+datas += [(str(_licenses), ".")]
 
 # markitdown usa magika para detectar el tipo de archivo, y magika carga un
 # modelo ONNX desde el paquete. Sin estos datos la conversión falla en runtime
@@ -114,7 +130,7 @@ if IS_MACOS:
     app = BUNDLE(  # noqa: F821
         collected,
         name=f"{APP_NAME}.app",
-        icon=None,
+        icon=ICON_MAC,
         bundle_identifier=APP_ID,
         version=__version__,
         info_plist={
@@ -149,4 +165,5 @@ else:
         target_arch=None,
         codesign_identity=None,
         entitlements_file=None,
+        icon=ICON_WIN,
     )

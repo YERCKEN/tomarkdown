@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e23d28"/>
+      <stop offset="1" stop-color="#8c2413"/>
+    </linearGradient>
+  </defs>
+  <!-- Fondo: cuadrado redondeado estilo macOS (824x824 centrado en 1024), primario con degradado a oscuro -->
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#bg)"/>
+  <!-- Marca de Markdown (dcurtis/markdown-mark, CC0 1.0), solo la M y la flecha, sin el marco.
+       viewBox nativo 0 0 208 128; el glifo ocupa x 30..185 y 30..98 (155x68), centro (107.5, 64).
+       scale 3.85 -> ~597x262, centrado en (512, 512). -->
+  <g transform="translate(98,266) scale(3.85)" fill="#ffffff">
+    <path d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zM155 98l-30-33h20V30h20v35h20z"/>
+  </g>
+</svg>
