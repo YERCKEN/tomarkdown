@@ -13,66 +13,121 @@
       <header
         class="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-5"
       >
-        <div class="flex items-baseline gap-3">
-          <h1 class="font-display text-[15px] font-bold tracking-tight">ToMarkdown</h1>
+        <div class="flex items-center gap-3">
+          <h1 class="flex items-center gap-2 font-display text-[15px] font-bold tracking-tight">
+            <span
+              data-icon="markdown"
+              data-icon-size="h-3 w-[19.5px] shrink-0"
+              class="text-primary"
+            ></span>
+            ToMarkdown
+          </h1>
           <span id="header-count" class="font-mono text-[11px] text-ink-dim tabular-nums"></span>
         </div>
 
-        <button id="btn-clear" type="button" class="btn btn-quiet" disabled>Limpiar</button>
+        <div class="flex items-center gap-2">
+          <button
+            id="btn-about"
+            type="button"
+            class="btn btn-icon btn-quiet"
+            data-icon="helpCircle"
+            aria-label="Qué hace ToMarkdown"
+            title="Qué hace ToMarkdown"
+            aria-haspopup="dialog"
+          ></button>
+          <button
+            id="btn-clear"
+            type="button"
+            class="btn btn-icon btn-quiet btn-danger"
+            data-icon="trash2"
+            aria-label="Limpiar la cola"
+            title="Limpiar la cola"
+            disabled
+          ></button>
+        </div>
       </header>
 
       <main class="flex min-h-0 flex-1 flex-col">
         <!-- Estado vacío: invitación, no cartel de "sin datos" --------------->
         <section
           id="drop-full"
-          class="m-5 flex flex-1 flex-col items-center justify-center gap-5 rounded-lg border border-dashed border-line px-6 py-8 text-center transition-colors duration-150"
+          class="dashed-zone drop-glow--radial m-5 flex flex-1 flex-col items-center justify-center gap-8 rounded-card px-6 pt-14 pb-4 text-center"
         >
-          <div class="max-w-md">
+          <svg class="dash-frame" aria-hidden="true">
+            <rect width="100%" height="100%" rx="14" />
+          </svg>
+
+          <div class="flex max-w-md flex-col items-center gap-5">
             <p class="font-display text-[17px] font-medium text-ink">
               Arrastra archivos aquí para convertirlos a Markdown
             </p>
-            <p class="mt-3 text-[13px] text-ink-muted">
-              o
-              <button id="btn-browse-full" type="button" class="btn btn-ghost ml-1 px-3 py-1.5">
-                examinar
-              </button>
-            </p>
+            <button
+              id="btn-browse-full"
+              type="button"
+              class="btn btn-ghost"
+              data-icon="folderOpen"
+            >
+              examinar
+            </button>
           </div>
 
-          <p
-            id="formats-full"
-            class="max-w-lg font-mono text-[11px] leading-relaxed text-ink-dim"
-          ></p>
+          <div class="flex flex-col items-center gap-3">
+            <p
+              id="formats-full"
+              class="max-w-lg font-mono text-[11px] leading-relaxed text-ink-dim"
+            ></p>
+            <button
+              id="link-about"
+              type="button"
+              class="link-quiet"
+              aria-haspopup="dialog"
+            >
+              ¿Qué hace ToMarkdown? →
+            </button>
+          </div>
+
+          <div class="brand-lockup">
+            <span class="font-mono text-[10px] font-medium tracking-[0.3em] text-ink-dim">
+              BY
+            </span>
+            <div class="brand-mark brand-mark--linear-top" aria-hidden="true"></div>
+          </div>
         </section>
 
         <!-- Con cola cargada, la zona colapsa a una franja delgada ---------->
         <section
           id="drop-slim"
-          class="mx-5 mt-4 flex shrink-0 items-center justify-between gap-4 rounded-md border border-dashed border-line px-4 py-2.5 transition-colors duration-150"
+          class="dashed-zone mx-5 mt-4 flex shrink-0 items-center justify-between gap-4 rounded-card px-4 py-2.5"
           hidden
         >
+          <svg class="dash-frame" aria-hidden="true">
+            <rect width="100%" height="100%" rx="14" />
+          </svg>
+
           <p class="truncate text-[12.5px] text-ink-muted">Arrastra más archivos aquí</p>
-          <button id="btn-browse-slim" type="button" class="btn-row">examinar</button>
+          <button
+            id="btn-browse-slim"
+            type="button"
+            class="btn btn-ghost btn-sm"
+            data-icon="folderOpen"
+            data-icon-size="size-3.5 shrink-0"
+          >
+            examinar
+          </button>
         </section>
 
         <!-- Aviso de archivos rechazados ------------------------------------>
         <div
           id="notice"
-          class="mx-5 mt-3 flex shrink-0 items-start gap-2.5 rounded-md border border-line bg-surface px-3.5 py-2.5"
+          class="mx-5 mt-3 flex shrink-0 items-start gap-2.5 rounded-card border border-line bg-surface px-3.5 py-2.5"
           role="status"
           hidden
         >
-          <svg
-            class="mt-0.5 size-3.5 shrink-0 text-ink-dim"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            aria-hidden="true"
-          >
-            <circle cx="8" cy="8" r="6.4" />
-            <path d="M8 5v3.6M8 11h.01" stroke-linecap="round" />
-          </svg>
+          <span
+            data-icon="info"
+            data-icon-size="mt-0.5 size-3.5 shrink-0"
+            class="text-ink-dim"
+          ></span>
           <p id="notice-text" class="text-[12.5px] leading-relaxed text-ink-muted"></p>
         </div>
 
@@ -96,7 +151,13 @@
         </div>
 
         <div class="flex items-center justify-end gap-2.5">
-          <button id="btn-save-all" type="button" class="btn btn-ghost" disabled>
+          <button
+            id="btn-save-all"
+            type="button"
+            class="btn btn-ghost"
+            data-icon="download"
+            disabled
+          >
             Guardar todo
           </button>
           <button id="btn-convert" type="button" class="btn btn-primary" disabled>Convertir</button>
@@ -104,6 +165,108 @@
       </footer>
     </div>
 
+    <!-- Pantalla «Qué hace ToMarkdown» ------------------------------------->
+    <div
+      id="about"
+      class="about-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="about-title"
+      hidden
+    >
+      <div class="about-card flex flex-col gap-5 p-6" tabindex="0">
+        <div class="flex items-center justify-between gap-4">
+          <h2
+            id="about-title"
+            class="font-display text-[17px] font-bold tracking-tight text-ink"
+          >
+            Qué hace ToMarkdown
+          </h2>
+          <button
+            id="btn-about-close"
+            type="button"
+            class="btn btn-icon btn-quiet shrink-0"
+            data-icon="x"
+            aria-label="Cerrar"
+            title="Cerrar"
+          ></button>
+        </div>
+
+        <p class="text-[13px] leading-relaxed text-ink-muted">
+          Convierte documentos a Markdown con
+          <span class="text-ink">markitdown</span>, la librería de Microsoft.
+          <strong class="font-medium text-ink"
+            >Extrae el texto y la estructura que el archivo ya tiene</strong
+          >
+          (títulos, listas, tablas, enlaces) y los reescribe en
+          <code class="font-mono text-[12px] text-ink">.md</code>. No resume, no reescribe con
+          otras palabras, no completa nada:
+          <strong class="font-medium text-ink">no usa inteligencia artificial</strong>. Lo que no
+          es texto, como una imagen dentro de un PDF, no se transcribe. Todo pasa en tu equipo,
+          sin conexión.
+        </p>
+
+        <section class="flex flex-col gap-2">
+          <h3 class="font-display text-[12px] font-medium tracking-wide text-ink-dim uppercase">
+            Cómo funciona
+          </h3>
+          <ul
+            class="flex list-disc flex-col gap-1.5 pl-4 text-[13px] leading-relaxed text-ink-muted"
+          >
+            <li>Arrastras archivos, o los eliges con <span class="text-ink">examinar</span>.</li>
+            <li>
+              Se convierten de a uno, en orden. Un archivo dañado se marca con un error y la cola
+              sigue.
+            </li>
+            <li>
+              Guardas cada <code class="font-mono text-[12px]">.md</code> por separado, o todos en
+              una carpeta con <span class="text-ink">Guardar todo</span>.
+            </li>
+            <li>
+              El archivo en curso no muestra porcentaje: markitdown no informa su avance, y un
+              número inventado sería peor que ninguno.
+            </li>
+          </ul>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <h3 class="font-display text-[12px] font-medium tracking-wide text-ink-dim uppercase">
+            Formatos
+          </h3>
+          <p id="about-formats" class="font-mono text-[11px] leading-relaxed text-ink-dim"></p>
+          <p class="text-[12.5px] leading-relaxed text-ink-muted">
+            Un <code class="font-mono text-[12px]">.zip</code> se abre y se convierte cada archivo
+            que tenga adentro.
+          </p>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <h3 class="font-display text-[12px] font-medium tracking-wide text-ink-dim uppercase">
+            Lo que no hace
+          </h3>
+          <ul
+            class="flex list-disc flex-col gap-1.5 pl-4 text-[13px] leading-relaxed text-ink-muted"
+          >
+            <li>Vista previa del Markdown.</li>
+            <li>OCR de imágenes o PDF escaneado.</li>
+            <li>Convertir URLs o YouTube.</li>
+            <li>Guardar un historial.</li>
+          </ul>
+        </section>
+
+        <div
+          class="flex items-center justify-between gap-4 border-t border-line-soft pt-4 font-mono text-[11px] text-ink-dim"
+        >
+          <span>ToMarkdown <span id="about-version"></span> · sin conexión · sin telemetría</span>
+          <span class="about-by shrink-0">
+            <span class="text-[9px] font-medium tracking-[0.25em]">BY</span>
+            <span class="about-by-mark" aria-label="YERCKEN" role="img"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script src="icons.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

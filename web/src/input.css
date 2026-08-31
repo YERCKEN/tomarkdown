@@ -6,6 +6,7 @@
 
 @source "../index.html";
 @source "../app.js";
+@source "../icons.js";
 
 /* ------------------------------------------------------------------ fuentes */
 /* Self hosted en web/fonts/. Nada de CDN ni Google Fonts: la app tiene que
@@ -74,6 +75,12 @@
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Dos radios y nada más. Todo contenedor usa `card`, todo botón es pastilla
+     (`rounded-full`, sin token porque no admite excepción), y `badge` es el
+     único escalón chico. El rango 4-8px de antes no significaba nada. */
+  --radius-card: 14px;
+  --radius-badge: 6px;
 }
 
 /* ------------------------------------------------------------------- base */
@@ -123,9 +130,41 @@
 /* -------------------------------------------------------------- componentes */
 
 @layer components {
+  /* --------------------------------------------------------------- botones
+     Tres ejes que componen: tamaño (md por omisión, sm), énfasis (primary,
+     ghost, quiet) y tono (danger como modificador). El estado de carga viaja
+     por `data-loading`, no por una clase, para que el atributo pueda entrar y
+     salir sin tocar el resto del `class`. */
+
   .btn {
-    @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-3.5 py-2
+    @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5
       text-[13px] font-medium whitespace-nowrap transition-colors duration-150;
+    height: 36px;
+  }
+
+  /* El `body` usa `cursor: default` porque es una app, no una página; lo que se
+     puede accionar sí muestra la manito. Un botón deshabilitado o en carga no. */
+  .btn:not(:disabled):not([data-loading]),
+  .link-quiet {
+    cursor: pointer;
+  }
+
+  /* 24px es el piso de WCAG 2.2 SC 2.5.8 Target Size (Minimum), nivel AA.
+     No hay escalón más chico. */
+  .btn-sm {
+    @apply gap-1 px-2.5 text-[12px];
+    height: 24px;
+  }
+
+  /* Icon-only: al heredar la pastilla, el cuadrado sale círculo sin regla extra.
+     Siempre con `aria-label`, o el botón queda sin nombre accesible. */
+  .btn-icon {
+    @apply px-0;
+    width: 36px;
+  }
+
+  .btn-sm.btn-icon {
+    width: 24px;
   }
 
   .btn:disabled {
@@ -136,17 +175,26 @@
      estado activo. Si está en todos lados deja de significar algo. */
   .btn-primary {
     @apply bg-primary text-white;
+    /* El halo es lo que separa la acción principal del resto sin subir el
+       contraste ni agrandar el botón. */
+    box-shadow: 0 0 24px -8px var(--color-primary);
   }
 
-  .btn-primary:not(:disabled):hover {
+  .btn-primary:not(:disabled):not([data-loading]):hover {
     @apply bg-primary-hover;
+    box-shadow: 0 0 28px -6px var(--color-primary);
+  }
+
+  /* Un botón apagado que igual irradia se lee como habilitado. */
+  .btn-primary:disabled {
+    box-shadow: none;
   }
 
   .btn-ghost {
     @apply border border-line text-ink-muted;
   }
 
-  .btn-ghost:not(:disabled):hover {
+  .btn-ghost:not(:disabled):not([data-loading]):hover {
     @apply border-raised bg-raised text-ink;
   }
 
@@ -154,23 +202,207 @@
     @apply text-ink-muted;
   }
 
-  .btn-quiet:not(:disabled):hover {
+  .btn-quiet:not(:disabled):not([data-loading]):hover {
     @apply text-ink;
   }
 
-  .btn-row {
-    @apply inline-flex shrink-0 items-center rounded border border-line px-2.5 py-1
-      text-[12px] font-medium text-ink-muted transition-colors duration-150;
+  /* Tono destructivo. Nunca sobre `.btn-primary`: un rojo sólido acá competiría
+     de igual a igual con Convertir, que es la acción principal de la ventana.
+     Se manifiesta al pasar por encima, que es cuando importa. */
+  .btn-danger:not(:disabled):not([data-loading]):hover {
+    @apply text-danger;
   }
 
-  .btn-row:hover {
-    @apply border-raised bg-raised text-ink;
+  .btn-ghost.btn-danger:not(:disabled):not([data-loading]):hover {
+    @apply border-danger/40 bg-danger/10 text-danger;
+  }
+
+  /* ----------------------------------------------------------- estado carga */
+
+  .btn-spinner {
+    display: none;
+    animation: btn-spin 0.7s linear infinite;
+  }
+
+  .btn[data-loading] {
+    pointer-events: none;
+  }
+
+  /* El spinner ocupa el lugar del icono; la etiqueta de texto se queda, porque
+     es la que dice qué se está haciendo. */
+  .btn[data-loading] > svg:not(.btn-spinner) {
+    display: none;
+  }
+
+  .btn[data-loading] .btn-spinner {
+    display: block;
+  }
+
+  @keyframes btn-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .ext-badge {
-    @apply shrink-0 rounded bg-raised px-1.5 py-0.5 text-center font-mono text-[10px]
+    @apply shrink-0 rounded-badge bg-raised px-1.5 py-0.5 text-center font-mono text-[10px]
       tracking-wide text-ink-muted uppercase;
     min-width: 40px;
+  }
+
+  /* -------------------------------------------------------- zona de arrastre
+     El guion de `border-dashed` no se puede alargar: CSS no expone el patrón.
+     Se dibuja con un `<svg>` de verdad, que sí acepta `stroke-dasharray`.
+
+     La clave es que el SVG va SIN `viewBox`: así su sistema de coordenadas son
+     píxeles CSS y el patrón no se deforma. Con una máscara escalada al 100% los
+     guiones horizontales salían el doble de largos que los verticales, porque
+     la caja no es cuadrada. La mitad exterior del trazo de 2px la recorta el
+     viewport, y queda una línea de 1px como la del resto de la interfaz. */
+
+  .dashed-zone {
+    --dash-color: var(--color-line);
+    position: relative;
+  }
+
+  .dash-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* `rx` viene además como atributo en el HTML, por si el motor no soporta las
+     propiedades geométricas de SVG2 en CSS. Acá manda el token, para que el
+     redondeado del punteado siga al del contenedor sin quedar desincronizado. */
+  .dash-frame rect {
+    width: 100%;
+    height: 100%;
+    rx: var(--radius-card);
+    fill: none;
+    stroke: var(--dash-color);
+    stroke-width: 2;
+    stroke-dasharray: 14 10;
+    transition: stroke 150ms;
+  }
+
+  .dashed-zone.is-dragging {
+    --dash-color: var(--color-primary);
+  }
+
+  /* El estado vacío es la única pantalla con lugar para respirar, y la que hace
+     de portada. El resto de la ventana sigue plano a propósito; esto es el
+     único lugar con un lavado de fondo.
+
+     Se probaron tres variantes: un solo semicírculo arriba, el mismo par con
+     un espejo abajo (encuadrando el logo), y un degradado lineal de punta a
+     punta. La lineal no funcionó —tapaba demasiado la zona— y se descartó. El
+     par en espejo queda comentado más abajo por si vale la pena retomarlo;
+     esto es lo que sigue activo: un único lavado arriba.
+
+     El color va por `color-mix()` con el rojo de marca al 35%, y no por el
+     token `--color-primary-dim`: así queda literalmente la misma opacidad que
+     el rojo del logo (`.brand-mark` también vive a 0.35), en vez de dos rojos
+     apagados que por separado se calibraron distinto y no hacían juego. */
+  .drop-glow--radial {
+    /* El centro va por fuera del borde superior: dentro de la caja solo entra
+       la caída, que es lo que se quiere ver. El tamaño probado más grande
+       tapaba demasiado la zona y se revirtió a este, el original. */
+    background-image: radial-gradient(
+      90% 60% at 50% -12%,
+      color-mix(in srgb, var(--color-primary) 35%, transparent) 0%,
+      transparent 62%
+    );
+
+    /* Versión en espejo, con un segundo lavado abajo detrás del logo:
+    background-image:
+      radial-gradient(90% 60% at 50% -12%, var(--color-primary-dim) 0%, transparent 62%),
+      radial-gradient(90% 60% at 50% 112%, var(--color-primary-dim) 0%, transparent 62%);
+    */
+  }
+
+  /* Reacciona al arrastre: el glow se agranda e intensifica en el mismo
+     instante en que `highlightDrop()` (app.js) pone `.is-dragging` y el borde
+     punteado pasa a rojo. Sin loop de animación: el resto de la reacción al
+     arrastre —borde, fondo tintado— también es un salto de estado, no algo
+     que corre en el tiempo, y esto sigue esa misma regla. Es la segunda
+     excepción de movimiento del spec, junto al barrido de la fila activa. */
+  .drop-glow--radial.is-dragging {
+    background-image: radial-gradient(
+      110% 75% at 50% -10%,
+      color-mix(in srgb, var(--color-primary) 55%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Firma «BY + logo» del estado vacío. De vuelta en el flujo normal del flex
+     principal —una sección más del grupo que se centra en el alto disponible,
+     igual que el título y el botón—, sin posicionamiento propio. */
+  .brand-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* El logo se aplica como `mask` y no como `<img>`: la máscara solo usa el
+     canal alfa del SVG, así que el degradado de acá pinta la composición
+     entera de forma pareja de abajo hacia arriba —rojo de marca fundiéndose
+     en el mismo gris que la lista de formatos— sin importar que cada letra
+     del diseño tenga su propia transformación interna.
+
+     La opacidad va acá, propia del logo, separada del «BY»: el texto vuelve a
+     su gris normal sin atenuar, y el logo lleva su propio nivel de fondo. */
+  .brand-mark {
+    /* Igualarlo al ancho del botón «examinar» (109px) quedaba simétrico pero
+       illegible: este wordmark trae mucho detalle ilustrado —tijeras,
+       remaches, círculos— que a 109px deja de leerse como letras y pasa a
+       ruido. 170px es el punto donde el trazo se sigue distinguiendo, a costa
+       de ya no calzar pixel a pixel con el botón de arriba. */
+    width: 170px;
+    aspect-ratio: 1920 / 729;
+    opacity: 0.35;
+    -webkit-mask-image: url("../images/YERCKEN_LOGO.svg");
+    mask-image: url("../images/YERCKEN_LOGO.svg");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    pointer-events: none;
+  }
+
+  /* Variantes probadas para `.brand-mark`, todas guardadas: se activa una
+     agregando el modificador junto a la clase base, sin perder las demás. */
+
+  /* Sin degradado y sin rojo: un solo tono, el mismo gris de la lista de
+     formatos. Referencia para comparar contra las versiones con color. */
+  .brand-mark--flat {
+    background-color: var(--color-ink-dim);
+  }
+
+  /* Rojo abajo, fundiéndose en el gris de arriba. */
+  .brand-mark--linear {
+    background-image: linear-gradient(to top, var(--color-primary), var(--color-ink-dim));
+  }
+
+  /* Misma idea, invertida: rojo arriba, fundiéndose en el gris de abajo. */
+  .brand-mark--linear-top {
+    background-image: linear-gradient(to bottom, var(--color-primary), var(--color-ink-dim));
+  }
+
+  /* Rojo al centro, cayendo hacia el gris en los bordes en toda la distancia
+     (0% a 100%): el núcleo cálido abarca la mayor parte de la palabra. */
+  .brand-mark--radial {
+    background-image: radial-gradient(var(--color-primary), var(--color-ink-dim));
+  }
+
+  /* Misma idea, pero con el alto en 40% para que la mezcla se resuelva rápido
+     y el 60% restante quede en gris parejo — el núcleo rojo ocupa mucho menos. */
+  .brand-mark--radial-tight {
+    background-image: radial-gradient(var(--color-primary) 0%, var(--color-ink-dim) 40%);
   }
 
   /* Nombres de archivo truncados AL MEDIO, para que la extensión siga visible.
@@ -215,6 +447,10 @@
     );
     transform: translateX(-100%);
     animation: row-sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    /* Negativo: el ciclo arranca con la banda YA dentro de la fila. Sin esto la
+       animación empieza fuera de cuadro por la izquierda y tarda ~0,6s en
+       asomar, así que un archivo que convierte en 0,3s no muestra nada. */
+    animation-delay: -0.55s;
     pointer-events: none;
   }
 
@@ -237,6 +473,92 @@
     border-radius: 999px;
     background-color: var(--color-primary);
   }
+
+  /* --------------------------------------------------- pantalla «qué hace»
+     Overlay modal sobre la ventana. El fondo atenúa lo de atrás; la tarjeta es
+     el único lugar de la app donde se puede seleccionar texto —el resto vive
+     con `user-select: none`, porque es una app y no una página. */
+
+  .about-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: color-mix(in srgb, var(--color-base) 82%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  /* `.about-overlay` fuerza `display: flex`, así que el `hidden` del HTML no
+     alcanza para esconderlo: hay que reponer el `display: none`. */
+  .about-overlay[hidden] {
+    display: none;
+  }
+
+  .about-card {
+    width: 100%;
+    max-width: 460px;
+    max-height: 100%;
+    overflow-y: auto;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    user-select: text;
+    /* Se puede seleccionar el texto, así que el cursor lo dice. */
+    cursor: text;
+    animation: about-in 160ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* La tarjeta es `tabindex="0"` solo para poder recorrerla con el teclado; no
+     es un control, así que no lleva el anillo de foco que sí llevan los botones. */
+  .about-card:focus,
+  .about-card:focus-visible {
+    outline: none;
+  }
+
+  @keyframes about-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+
+  /* Enlace de texto sin caja: el «¿Qué hace ToMarkdown?» del estado vacío. */
+  .link-quiet {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink-dim);
+    transition: color 150ms;
+  }
+
+  .link-quiet:hover {
+    color: var(--color-ink-muted);
+  }
+
+  /* Firma «BY YERCKEN» del pie del modal: la misma marca del estado vacío pero
+     en chico y en un solo tono, para que sea sello y no reclame atención. */
+  .about-by {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .about-by-mark {
+    display: inline-block;
+    width: 50px;
+    aspect-ratio: 1920 / 729;
+    background-color: var(--color-ink-dim);
+    -webkit-mask-image: url("../images/YERCKEN_LOGO.svg");
+    mask-image: url("../images/YERCKEN_LOGO.svg");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
 }
 
 /* ------------------------------------------------------- movimiento reducido */
@@ -251,6 +573,18 @@
 
   .sweep-dot {
     display: block;
+  }
+
+  /* El spinner no se detiene: uno congelado se lee como una app colgada, que es
+     exactamente lo contrario de lo que tiene que comunicar. Se le baja el ritmo. */
+  .btn-spinner {
+    animation-duration: 1.8s;
+  }
+
+  /* El `*` de abajo solo toca `transition-duration`; el keyframe de entrada de
+     la tarjeta hay que anularlo aparte. */
+  .about-card {
+    animation: none;
   }
 
   *,
