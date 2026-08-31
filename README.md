@@ -55,7 +55,12 @@ Descarga el archivo de tu plataforma desde la
 
 ### macOS
 
-Descomprime y arrastra `ToMarkdown.app` a `Aplicaciones`.
+> [!IMPORTANT]
+> El binario es solo para **Mac con Apple Silicon** (M1 o posterior). No hay
+> build para Intel.
+
+Monta `ToMarkdown-x.y.z.dmg` y arrastra `ToMarkdown.app` a la carpeta
+`Aplicaciones` (el `.dmg` trae el alias).
 
 > [!IMPORTANT]
 > El `.app` no está firmado con una cuenta de desarrollador de Apple, así que la
@@ -261,14 +266,18 @@ uv run pyinstaller --noconfirm build.spec
 Para reemplazar el icono por defecto de PyInstaller por uno propio, ver
 [Cambiar el icono de la app](docs/guias/cambiar-el-icono.md).
 
+Para el release, [`build.yml`](.github/workflows/build.yml) empaqueta el `.app`
+en un `.dmg` (con `hdiutil` y un alias a `/Applications`).
+
 > [!WARNING]
 > PyInstaller no hace cross compile. El `.app` solo sale desde macOS y el `.exe`
 > solo desde Windows. Por eso el workflow de CI usa una matriz con los dos
-> runners y se dispara con cada tag `v*`.
+> runners y se dispara con cada tag `v*`. El runner de macOS es Apple Silicon:
+> no se publica build para Intel.
 
 ### Sobre el tamaño
 
-El `.app` de macOS pesa unos **161 MB** (65 MB comprimido). No es margen que se
+El `.app` de macOS pesa unos **161 MB** (73 MB en el `.dmg`). No es margen que se
 pueda recortar mucho:
 
 - markitdown depende de `magika` en su núcleo, que trae un modelo ONNX y
