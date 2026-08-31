@@ -49,6 +49,7 @@ compartidos. Sin `__init__.py` (pytest los descubre por nombre).
 | `test_api.py` | Helpers puros de `api.py`: `_extension`, `_first_path`, `_all_paths`, `_unique_md_path`. |
 | `test_config.py` | `supported_extensions()` y `file_dialog_filter()`. |
 | `test_main.py` | `_expand_paths` (carpeta → archivos ordenados) y `_self_check` (ok con una carpeta de muestras, falla con un archivo roto o una carpeta vacía); que cada nombre de `CONVERTER_IMPORTS` importe. |
+| `test_bump_version.py` | Núcleo puro de `scripts/bump_version.py`: parseo de `__version__`, los tres saltos de SemVer y el reemplazo de una sola línea. |
 
 ### Fixtures (`conftest.py`)
 
