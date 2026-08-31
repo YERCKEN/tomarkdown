@@ -39,6 +39,21 @@ jobs:
       - name: Instalar dependencias
         run: uv sync --extra dev
 
+      # En un tag, el nombre (sin la v) tiene que coincidir con app.config.__version__,
+      # que es lo que empaqueta hatchling y muestra la app. Si no, el binario
+      # saldría con una versión equivocada.
+      - name: Validar que el tag coincide con __version__
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          code="$(uv run python -c 'import app.config; print(app.config.__version__)')"
+          if [ "$tag" != "$code" ]; then
+            echo "::error::El tag $GITHUB_REF_NAME no coincide con __version__ ($code). Actualizá app/config.py o recreá el tag."
+            exit 1
+          fi
+          echo "✅ Tag $GITHUB_REF_NAME == __version__ $code"
+
       - name: Pruebas
         run: uv run pytest
 
