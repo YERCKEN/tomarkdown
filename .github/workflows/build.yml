@@ -37,10 +37,8 @@ jobs:
       - name: Instalar dependencias
         run: uv sync --extra dev
 
-      - name: Probar el convertidor y la cola
-        run: |
-          uv run python scripts/smoke_convert.py
-          uv run python scripts/smoke_queue.py
+      - name: Pruebas
+        run: uv run pytest
 
       - name: Empaquetar
         run: uv run pyinstaller --noconfirm --log-level WARN build.spec

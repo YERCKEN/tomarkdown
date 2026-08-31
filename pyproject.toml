@@ -10,10 +10,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pyinstaller>=6.16"]
+dev = [
+    "pyinstaller>=6.16",
+    "pytest>=8",
+]
 
 [project.scripts]
 tomarkdown = "app.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
 
 [build-system]
 requires = ["hatchling"]
