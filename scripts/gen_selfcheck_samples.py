@@ -190,9 +190,11 @@ def main(argv: list[str]) -> int:
 
     destination = Path(argv[0])
     written = write_samples(destination)
-    print(f"✅ {len(written)} muestras en {destination}")
+    # Solo ASCII: en Windows este script corre con stdout en cp1252 y un emoji
+    # levanta UnicodeEncodeError.
+    print(f"{len(written)} muestras en {destination}")
     for path in written:
-        print(f"  · {path.name} ({path.stat().st_size} bytes)")
+        print(f"  - {path.name} ({path.stat().st_size} bytes)")
     return 0
 
 
