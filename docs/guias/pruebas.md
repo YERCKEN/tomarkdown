@@ -143,4 +143,4 @@ Si cualquiera falla, no se publica el release.
 
 ---
 
-Anterior: [Cambiar el icono de la app](cambiar-el-icono.md) · Siguiente: [Índice](../index.md)
+Anterior: [Cambiar el icono de la app](cambiar-el-icono.md) · Siguiente: [Publicar y verificar un release](verificar-el-release.md)
