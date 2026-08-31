@@ -79,13 +79,19 @@ def _make_drag_binder(api: Api):
 
 
 def _echo(message: str) -> None:
-    """`print` que no revienta si el `.exe` windowed de Windows no tiene consola.
+    """`print` para `--self-check` que no revienta según cómo esté la consola.
 
-    En modo ventana `sys.stdout` puede ser `None`; ahí `--self-check` solo cuenta
-    por el código de salida y el texto se descarta.
+    En el `.exe` windowed de Windows `sys.stdout` es `None` (ahí solo cuenta el
+    código de salida). En una consola de Windows la codificación puede ser
+    cp1252 y los ✓/✗ levantan `UnicodeEncodeError`: en ese caso se degradan a
+    ASCII en vez de cortar la comprobación.
     """
-    if sys.stdout is not None:
+    if sys.stdout is None:
+        return
+    try:
         print(message)
+    except UnicodeEncodeError:
+        print(message.encode("ascii", "replace").decode("ascii"))
 
 
 def _expand_paths(paths: list[str]) -> list[str]:

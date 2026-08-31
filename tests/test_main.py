@@ -75,3 +75,20 @@ def test_echo_sin_stdout_no_lanza(monkeypatch):
     monkeypatch.setattr("sys.stdout", None)
 
     _echo("descartado")
+
+
+def test_echo_degrada_a_ascii_si_la_consola_no_soporta_unicode(monkeypatch):
+    import io
+
+    class AsciiOnly(io.StringIO):
+        def write(self, s):
+            s.encode("ascii")  # UnicodeEncodeError con no-ASCII, como cp1252
+            return super().write(s)
+
+    fake = AsciiOnly()
+    monkeypatch.setattr("sys.stdout", fake)
+
+    _echo("✓ hola")
+
+    assert "hola" in fake.getvalue()
+    assert "✓" not in fake.getvalue()
