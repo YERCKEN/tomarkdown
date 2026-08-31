@@ -1,0 +1,23 @@
+{
+  // F5 abre la ventana nativa. Necesita la extensión Python (ms-python.python),
+  // que detecta `.venv/` sola como intérprete tras `uv sync --extra dev`.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ToMarkdown",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "ToMarkdown (debug WebView)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "env": { "TOMARKDOWN_DEBUG": "1" }
+    }
+  ]
+}

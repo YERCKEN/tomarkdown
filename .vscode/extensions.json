@@ -1,0 +1,5 @@
+{
+  // ms-python.python arrastra ms-python.debugpy (el que corre launch.json).
+  // bradlc.vscode-tailwindcss solo hace falta si tocas web/src/input.css.
+  "recommendations": ["ms-python.python", "bradlc.vscode-tailwindcss"]
+}
