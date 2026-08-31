@@ -16,6 +16,7 @@ y la resuelve como promesa.
 | `pick_files()` | `list[FileEntry]` | Abre el diálogo nativo con selección múltiple, filtrado por las extensiones soportadas. Lista vacía si se cancela. |
 | `add_paths(paths)` | `list[FileEntry]` | Recibe rutas absolutas, descarta duplicados y formatos no soportados, y devuelve **solo las aceptadas**. |
 | `get_supported_extensions()` | `list[str]` | La lista viva de extensiones. El front la usa para el estado vacío y para el mensaje de rechazo. |
+| `get_app_info()` | `dict` | `{"name", "version"}` desde `app/config.py`. Lo usa la pantalla «Qué hace ToMarkdown». |
 
 Los duplicados se detectan por `os.path.realpath`, no por nombre: dos archivos
 con el mismo nombre en carpetas distintas son dos entradas.
@@ -46,8 +47,10 @@ en `file_ids`.
 |---|---|---|
 | `save_one(file_id)` | `str \| None` | Diálogo «guardar como» con el nombre sugerido `<original>.md`. Devuelve la ruta escrita o `None` si se canceló. |
 | `save_all(file_ids)` | `dict` | Diálogo de carpeta y escritura de todos los convertidos. |
+| `reveal(file_id)` | `bool` | Abre el explorador del sistema con el `.md` ya guardado seleccionado. |
 
-`save_all` devuelve `{"folder": str, "written": int, "failed": list[str]}`.
+`save_all` devuelve
+`{"folder": str, "written": int, "failed": list[str], "saved": dict[str, str]}`.
 
 Si ya existe un `.md` con ese nombre agrega sufijo numérico, así guardar dos
 veces en la misma carpeta no pisa nada:
@@ -59,8 +62,32 @@ informe-3.md
 ```
 
 > [!IMPORTANT]
+> Por ese sufijo el front **no puede deducir** la ruta final a partir de la
+> carpeta, y por eso existe `saved`: mapea cada `id` a la ruta realmente escrita.
+
+> [!IMPORTANT]
 > Solo se pueden guardar archivos en estado `done`. El resto se ignora en
 > silencio en vez de fallar.
+
+### Revelar en el explorador
+
+`reveal` no recibe la ruta: la lee de `saved_to` en la entrada del lado Python,
+que ya guarda la ruta exacta tanto en `save_one` como en `save_all`. El front
+solo manda el `id`.
+
+| Sistema | Comando |
+|---|---|
+| macOS | `open -R <archivo>` |
+| Windows | `explorer /select,<archivo>` |
+| Otros | `xdg-open <carpeta>` |
+
+Se lanza con una lista de argumentos y nunca con `shell=True`: los nombres
+vienen del disco del usuario y traen espacios, comillas y acentos.
+
+> [!NOTE]
+> El resultado del proceso no se comprueba en ninguna plataforma, porque
+> `explorer` devuelve código 1 incluso cuando abre bien. Si el archivo ya no
+> está en la ruta guardada, `reveal` emite `save:error` y devuelve `False`.
 
 ---
 
@@ -100,7 +127,7 @@ archivo.
 | `queue:done` | `{completed, failed, cancelled}` | Terminó todo |
 | `files:added` | `{files}` | Llegaron archivos por arrastre nativo |
 | `files:rejected` | `{names}` | Se descartaron por formato no soportado |
-| `save:error` | `{id, error}` | No se pudo escribir un archivo |
+| `save:error` | `{id, error}` | No se pudo escribir un archivo, o `reveal` no encontró el guardado |
 
 En `queue:progress`, `completed` cuenta **procesados** (convertidos más
 fallidos): es lo que hace que la barra general llegue al final. En `queue:done`,

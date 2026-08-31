@@ -1,10 +1,17 @@
-"""Pruebas de los helpers puros de `app.api` (sin ventana ni diálogos nativos)."""
+"""Pruebas de `app.api` que no necesitan ventana ni diálogos nativos."""
 
 from __future__ import annotations
 
 import pytest
 
-from app.api import _all_paths, _extension, _first_path, _unique_md_path
+from app import config
+from app.api import Api, _all_paths, _extension, _first_path, _unique_md_path
+
+
+def test_get_app_info():
+    info = Api().get_app_info()
+
+    assert info == {"name": config.APP_NAME, "version": config.__version__}
 
 
 @pytest.mark.parametrize(

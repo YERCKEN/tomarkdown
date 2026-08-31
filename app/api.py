@@ -13,13 +13,21 @@ from __future__ import annotations
 import json
 import logging
 import os
+import subprocess
+import sys
 import threading
 import uuid
 from pathlib import Path
 
 import webview
 
-from app.config import SUPPORTED_EXTENSIONS, file_dialog_filter, supported_extensions
+from app.config import (
+    APP_NAME,
+    SUPPORTED_EXTENSIONS,
+    __version__,
+    file_dialog_filter,
+    supported_extensions,
+)
 from app.queue_runner import QueueRunner
 
 logger = logging.getLogger(__name__)
@@ -159,6 +167,10 @@ class Api:
 
     # --------------------------------------------------- selección de archivos
 
+    def get_app_info(self) -> dict:
+        """Nombre y versión de la app, para la pantalla «Qué hace ToMarkdown»."""
+        return {"name": APP_NAME, "version": __version__}
+
     def get_supported_extensions(self) -> list[str]:
         """Lista viva de extensiones soportadas, para el filtro visual del front."""
         return supported_extensions()
@@ -256,11 +268,14 @@ class Api:
         Si ya existe un `.md` con ese nombre agrega sufijo numérico
         (`informe.md`, `informe-2.md`), así guardar dos veces no pisa nada.
 
-        :returns: `{"folder": str, "written": int, "failed": list[str]}`.
+        :returns: `{"folder": str, "written": int, "failed": list[str], "saved": dict[str, str]}`.
+            `saved` mapea id a la ruta escrita: el nombre final puede llevar
+            sufijo numérico, así que el front no puede deducirlo desde la carpeta.
         """
         window = self._window
+        empty = {"folder": "", "written": 0, "failed": [], "saved": {}}
         if window is None:
-            return {"folder": "", "written": 0, "failed": []}
+            return empty
 
         ids = list(file_ids or []) or list(self._entries)
         ready = [
@@ -271,15 +286,16 @@ class Api:
             and fid in self._markdown
         ]
         if not ready:
-            return {"folder": "", "written": 0, "failed": []}
+            return empty
 
         folder = _first_path(window.create_file_dialog(webview.FileDialog.FOLDER))
         if not folder:
-            return {"folder": "", "written": 0, "failed": []}
+            return empty
 
         destination = Path(folder)
         written = 0
         failed: list[str] = []
+        saved: dict[str, str] = {}
 
         for file_id in ready:
             entry = self._entries[file_id]
@@ -292,10 +308,60 @@ class Api:
                 continue
 
             entry["saved_to"] = str(target)
+            saved[file_id] = str(target)
             written += 1
 
         logger.info("✅ Guardados %d archivos en %s", written, destination)
-        return {"folder": str(destination), "written": written, "failed": failed}
+        return {
+            "folder": str(destination),
+            "written": written,
+            "failed": failed,
+            "saved": saved,
+        }
+
+    def reveal(self, file_id: str) -> bool:
+        """Muestra en el explorador del sistema el `.md` ya guardado.
+
+        La ruta se lee de la entrada del lado Python, que guarda la ruta exacta
+        tanto en `save_one` como en `save_all`. El front no la necesita.
+
+        :returns: True si se lanzó el explorador.
+        """
+        entry = self._entries.get(file_id)
+        if entry is None:
+            return False
+
+        target = entry.get("saved_to")
+        if not target or not os.path.isfile(target):
+            self._emit(
+                "save:error",
+                {"id": file_id, "error": "El archivo guardado ya no está en esa ruta"},
+            )
+            return False
+
+        # Lista de argumentos y nunca `shell=True`: los nombres vienen del disco
+        # del usuario y traen espacios, comillas y acentos.
+        if sys.platform == "darwin":
+            command = ["open", "-R", target]
+        elif os.name == "nt":
+            # `explorer` devuelve código 1 incluso cuando abre bien, por eso el
+            # resultado no se chequea en ninguna plataforma.
+            command = ["explorer", f"/select,{os.path.normpath(target)}"]
+        else:
+            command = ["xdg-open", os.path.dirname(target)]
+
+        try:
+            subprocess.run(command, check=False)
+        except OSError:
+            logger.exception("🔴 No se pudo abrir el explorador en %s", target)
+            self._emit(
+                "save:error",
+                {"id": file_id, "error": "No se pudo abrir el explorador de archivos"},
+            )
+            return False
+
+        logger.info("🗄️ Revelado %s", target)
+        return True
 
 
 def _unique_md_path(folder: Path, stem: str) -> Path:
