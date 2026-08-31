@@ -78,6 +78,16 @@ def _make_drag_binder(api: Api):
     return on_loaded
 
 
+def _echo(message: str) -> None:
+    """`print` que no revienta si el `.exe` windowed de Windows no tiene consola.
+
+    En modo ventana `sys.stdout` puede ser `None`; ahí `--self-check` solo cuenta
+    por el código de salida y el texto se descarta.
+    """
+    if sys.stdout is not None:
+        print(message)
+
+
 def _expand_paths(paths: list[str]) -> list[str]:
     """Expande las carpetas a los archivos que contienen, ordenados.
 
@@ -117,17 +127,17 @@ def _self_check(paths: list[str]) -> int:
 
     failures = 0
 
-    print("Módulos de los converters:")
+    _echo("Módulos de los converters:")
     for name in CONVERTER_IMPORTS:
         try:
             importlib.import_module(name)
         except Exception as exc:  # noqa: BLE001 - se reporta cualquier fallo de import
             failures += 1
-            print(f"  ✗ import {name}: {exc}")
+            _echo(f"  ✗ import {name}: {exc}")
         else:
-            print(f"  ✓ import {name}")
+            _echo(f"  ✓ import {name}")
 
-    print("Conversión:")
+    _echo("Conversión:")
     with tempfile.TemporaryDirectory() as tmp:
         if not paths:
             sample = os.path.join(tmp, "prueba.txt")
@@ -138,22 +148,22 @@ def _self_check(paths: list[str]) -> int:
             targets = _expand_paths(paths)
             if not targets:
                 failures += 1
-                print("  ✗ no hay archivos para convertir en esas rutas")
+                _echo("  ✗ no hay archivos para convertir en esas rutas")
 
         for path in targets:
             try:
                 markdown = convert(path)
             except ConversionError as exc:
                 failures += 1
-                print(f"  ✗ {os.path.basename(path)}: {exc}")
+                _echo(f"  ✗ {os.path.basename(path)}: {exc}")
             else:
-                print(f"  ✓ {os.path.basename(path)}: {len(markdown)} caracteres")
+                _echo(f"  ✓ {os.path.basename(path)}: {len(markdown)} caracteres")
 
     if failures:
-        print(f"\n🔴 {failures} comprobaciones fallaron")
+        _echo(f"\n🔴 {failures} comprobaciones fallaron")
         return 1
 
-    print(f"\n✅ {APP_NAME} {__version__} convierte correctamente")
+    _echo(f"\n✅ {APP_NAME} {__version__} convierte correctamente")
     return 0
 
 
