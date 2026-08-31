@@ -7,7 +7,7 @@ import importlib
 import pytest
 
 from app.config import CONVERTER_IMPORTS
-from app.main import _expand_paths, _self_check
+from app.main import _echo, _expand_paths, _self_check
 from scripts.gen_selfcheck_samples import write_samples
 
 # ------------------------------------------------------ CONVERTER_IMPORTS
@@ -62,3 +62,16 @@ def test_self_check_falla_con_un_archivo_roto(tmp_path, make_pdf):
 
 def test_self_check_falla_si_la_carpeta_no_tiene_archivos(tmp_path):
     assert _self_check([str(tmp_path)]) == 1
+
+
+def test_self_check_no_revienta_sin_stdout(monkeypatch):
+    """El .exe windowed de Windows puede tener `sys.stdout` en None."""
+    monkeypatch.setattr("sys.stdout", None)
+
+    assert _self_check([]) == 0
+
+
+def test_echo_sin_stdout_no_lanza(monkeypatch):
+    monkeypatch.setattr("sys.stdout", None)
+
+    _echo("descartado")
