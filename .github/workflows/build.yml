@@ -96,9 +96,20 @@ jobs:
           ln -s /Applications "$staging/Applications"
           hdiutil create -volname "ToMarkdown" -srcfolder "$staging" -ov -format UDZO "$dmg"
 
-      - name: Comprimir (Windows)
+      # Windows: el .exe onefile como portable (en zip) y, aparte, un instalador
+      # de Inno Setup (Program Files, menú inicio, desinstalador).
+      - name: Comprimir portable (Windows)
         if: runner.os == 'Windows'
-        run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ${{ matrix.artifact }}.zip
+        run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ToMarkdown-${{ steps.version.outputs.value }}-portable.zip
+
+      - name: Instalador (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=${{ steps.version.outputs.value }}" `
+            packaging\windows\installer.iss
 
       - name: Publicar artefacto (macOS)
         if: runner.os == 'macOS'
@@ -113,7 +124,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}.zip
+          path: |
+            ToMarkdown-*-portable.zip
+            dist/ToMarkdown-Setup-*.exe
           if-no-files-found: error
 
   release:

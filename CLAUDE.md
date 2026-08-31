@@ -64,7 +64,11 @@ uv run pyinstaller --noconfirm build.spec
 macOS → `dist/ToMarkdown.app` (onedir dentro de un `.app`). Windows →
 `dist/ToMarkdown.exe` (onefile). PyInstaller no hace cross-compile: cada binario
 sale de su plataforma, por eso CI usa matriz `macos-latest` + `windows-latest` y
-dispara con tags `v*`.
+dispara con tags `v*`. El runner de macOS es Apple Silicon: no hay build Intel.
+
+Para el release, `build.yml` empaqueta el `.app` en un `.dmg` (`hdiutil` + alias
+a `/Applications`) y el `.exe` en un instalador de Inno Setup
+(`packaging/windows/installer.iss`), más un zip portable del `.exe`.
 
 ### Verificar un bundle
 
