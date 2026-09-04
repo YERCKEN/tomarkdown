@@ -70,6 +70,7 @@
   --color-primary-dim: #2a1416;
 
   --color-ok: #3d9970;
+  --color-ok-dim: #12241c;
   --color-danger: #e5484d;
 
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -463,6 +464,42 @@
     to {
       transform: translateX(100%);
     }
+  }
+
+  /* «Done» es un estado final, no un barrido en loop como `.row-active`: el
+     lavado verde es estático, angosto y pegado al borde derecho, así no
+     compite con el chip de estado que vive en esa misma esquina. */
+  .row-done {
+    background-image: linear-gradient(90deg, transparent 60%, var(--color-ok-dim) 100%);
+    background-repeat: no-repeat;
+  }
+
+  /* --------------------------------------------------------- chip de estado
+     Un tono por estado, mismo patrón `@apply` que `.ext-badge`. Reemplaza el
+     texto plano de antes: la fila deja de depender solo del ícono chico de
+     gancho verde para comunicar que terminó. */
+  .status-chip {
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-badge px-2 py-0.5
+      text-[11px] font-medium whitespace-nowrap;
+  }
+
+  .status-chip--pending {
+    @apply bg-raised text-ink-dim;
+  }
+
+  .status-chip--converting {
+    @apply text-ink-muted;
+    background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  .status-chip--done {
+    @apply text-ok;
+    background-color: color-mix(in srgb, var(--color-ok) 16%, transparent);
+  }
+
+  .status-chip--error {
+    @apply text-danger;
+    background-color: color-mix(in srgb, var(--color-danger) 14%, transparent);
   }
 
   /* Reemplazo del barrido cuando el sistema pide menos movimiento. */
