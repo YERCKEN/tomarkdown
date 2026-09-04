@@ -9,6 +9,11 @@ líneas pasan a una sección con número y fecha.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-03
+
+Pipeline de publicación endurecido. Verificado en Windows 11 y en dos Macs con
+Apple Silicon (ver issue #4).
+
 ### Added
 
 - Workflow `ci.yml`: `pytest` en cada push a `develop`/`main` y en cada pull
@@ -62,5 +67,6 @@ Primera versión publicada.
 - El binario de macOS es solo para Apple Silicon.
 - Ni el `.app` ni el `.exe` están firmados con una cuenta de desarrollador.
 
-[Unreleased]: https://github.com/YERCKEN/tomarkdown/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/YERCKEN/tomarkdown/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/YERCKEN/tomarkdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/YERCKEN/tomarkdown/releases/tag/v0.1.0
