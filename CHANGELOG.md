@@ -9,6 +9,20 @@ líneas pasan a una sección con número y fecha.
 
 ## [Unreleased]
 
+### Added
+
+- Soltar (o elegir) una **carpeta** ahora avisa en vez de ignorarla en silencio;
+  el aviso distingue carpetas de formatos no soportados.
+- El diálogo de **guardar** arranca en la última carpeta usada y la recuerda
+  (`settings.json`, un solo valor, en el dir de config del SO). Nuevo módulo
+  `app/settings.py`.
+- `ruff` (lint + formato) configurado y corriendo en CI (`ci.yml`).
+
+### Tests
+
+- `test_api.py` cubre `on_native_drop`, el ciclo de estado de `start_conversion`
+  y `save_all` (fixture `fake_window`). Nuevo `test_settings.py`.
+
 ## [0.2.0] - 2026-09-03
 
 Pipeline de publicación endurecido. Verificado en Windows 11 y en dos Macs con
