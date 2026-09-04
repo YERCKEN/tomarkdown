@@ -5,7 +5,8 @@ editar esa linea y taggear, sin garantia de que coincidan; `build.yml` aborta un
 tag que no case con `__version__`. Este script hace las dos cosas de una:
 
 1. Reescribe `__version__` en `app/config.py` con el salto pedido.
-2. `git commit` de esa linea + `git tag vX.Y.Z`.
+2. `git commit` de esa linea + `git tag -a vX.Y.Z` (anotado, para que
+   `git push --follow-tags` lo suba).
 
 **No hace push**: eso lo decide la persona. Tampoco mueve `[Unreleased]` en
 `CHANGELOG.md`, solo lo recuerda.
@@ -102,7 +103,8 @@ def main(argv: list[str]) -> int:
     CONFIG.write_text(replace_version(text, new), encoding="utf-8")
     _git("add", str(CONFIG.relative_to(REPO)))
     _git("commit", "-m", f"chore: release {tag}")
-    _git("tag", tag)
+    # Anotado, no lightweight: si no, `git push --follow-tags` no lo sube.
+    _git("tag", "-a", tag, "-m", f"Release {tag}")
 
     old = ".".join(str(n) for n in current)
     print(f"✅ {old} → {new}")
