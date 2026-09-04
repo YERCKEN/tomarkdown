@@ -524,29 +524,72 @@ async function clearQueue() {
 
 // ------------------------------------------------------- hint de pegar
 
+/** Zonas de arrastre, las dos: la de estado vacío y la franja delgada. */
+const DROP_ZONES = [el.dropFull, el.dropSlim];
+
 /**
- * El hint sigue al cursor (posición puesta acá, visibilidad la decide el
- * sondeo del portapapeles) y se throttlea con requestAnimationFrame: sin eso,
- * `mousemove` dispara muchas más veces por segundo de las que hace falta
- * pintar.
+ * true mientras el cursor está dentro de la ventana. El hint y el spotlight
+ * solo tienen sentido con el mouse adentro: sin este chequeo, salir de la
+ * ventana los deja pegados en el último punto donde hubo un `mousemove`.
+ */
+let cursorInside = false;
+
+function updateClipboardHintVisibility() {
+  el.clipboardHint.hidden = !(state.clipboardHasFiles && cursorInside);
+}
+
+function updateClipboardGlowActive() {
+  const active = state.clipboardHasFiles && cursorInside;
+  for (const zone of DROP_ZONES) zone.classList.toggle('clipboard-glow-active', active);
+}
+
+/**
+ * El hint sigue al cursor y el spotlight de las zonas de arrastre se posiciona
+ * con él; ambos se throttlean con requestAnimationFrame en el mismo callback,
+ * porque `mousemove` dispara muchas más veces por segundo de las que hace
+ * falta pintar.
  */
 let hintFrame = null;
 
 function moveClipboardHint(event) {
+  cursorInside = true;
+  updateClipboardHintVisibility();
+  updateClipboardGlowActive();
+
   if (hintFrame !== null) return;
   hintFrame = requestAnimationFrame(() => {
     hintFrame = null;
     el.clipboardHint.style.transform = `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`;
+
+    for (const zone of DROP_ZONES) {
+      if (zone.hidden) continue;
+      const rect = zone.getBoundingClientRect();
+      zone.style.setProperty('--spot-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+      zone.style.setProperty('--spot-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+    }
   });
+}
+
+/** El cursor salió de la ventana: nada de hint ni spotlight pegados afuera. */
+function handleCursorLeftWindow() {
+  cursorInside = false;
+  updateClipboardHintVisibility();
+  updateClipboardGlowActive();
 }
 
 function setClipboardHasFiles(hasFiles) {
   if (hasFiles === state.clipboardHasFiles) return;
   state.clipboardHasFiles = hasFiles;
-  el.clipboardHint.hidden = !hasFiles;
+  updateClipboardHintVisibility();
+  updateClipboardGlowActive();
 }
 
 document.addEventListener('mousemove', moveClipboardHint);
+// `mouseleave` en `documentElement` (no en `document`) es lo que de verdad
+// dispara al salir de la ventana: en `document` no burbujea igual. `blur` es
+// el respaldo para cuando el cursor se queda quieto y otra ventana toma foco.
+document.documentElement.addEventListener('mouseleave', handleCursorLeftWindow);
+window.addEventListener('blur', handleCursorLeftWindow);
 el.clipboardHint.textContent = `${PASTE_SHORTCUT} para pegar`;
 
 /* Sondeo liviano en vez de un hilo de Python empujando eventos: es el mismo
