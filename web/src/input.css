@@ -311,8 +311,8 @@
     opacity: 0;
     transition: opacity 200ms ease;
     background: radial-gradient(
-      260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-      color-mix(in srgb, var(--color-primary) 32%, transparent) 0%,
+      120px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in srgb, var(--color-primary) 26%, transparent) 0%,
       transparent 70%
     );
   }

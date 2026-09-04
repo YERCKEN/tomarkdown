@@ -527,69 +527,66 @@ async function clearQueue() {
 /** Zonas de arrastre, las dos: la de estado vacío y la franja delgada. */
 const DROP_ZONES = [el.dropFull, el.dropSlim];
 
-/**
- * true mientras el cursor está dentro de la ventana. El hint y el spotlight
- * solo tienen sentido con el mouse adentro: sin este chequeo, salir de la
- * ventana los deja pegados en el último punto donde hubo un `mousemove`.
- */
-let cursorInside = false;
-
-function updateClipboardHintVisibility() {
-  el.clipboardHint.hidden = !(state.clipboardHasFiles && cursorInside);
+function isPointInRect(x, y, rect) {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
-function updateClipboardGlowActive() {
-  const active = state.clipboardHasFiles && cursorInside;
-  for (const zone of DROP_ZONES) zone.classList.toggle('clipboard-glow-active', active);
+/** La zona de arrastre visible que el cursor está pisando ahora mismo, o `null`. */
+function zoneUnderCursor(x, y) {
+  for (const zone of DROP_ZONES) {
+    if (!zone.hidden && isPointInRect(x, y, zone.getBoundingClientRect())) return zone;
+  }
+  return null;
 }
 
 /**
- * El hint sigue al cursor y el spotlight de las zonas de arrastre se posiciona
- * con él; ambos se throttlean con requestAnimationFrame en el mismo callback,
- * porque `mousemove` dispara muchas más veces por segundo de las que hace
- * falta pintar.
+ * El hint y el spotlight son la promesa de "acá también podés pegar": solo
+ * tienen sentido sobre una zona de arrastre, no sueltos en cualquier parte de
+ * la ventana. Se throttlean con requestAnimationFrame: `mousemove` dispara
+ * muchas más veces por segundo de las que hace falta pintar.
  */
 let hintFrame = null;
 
 function moveClipboardHint(event) {
-  cursorInside = true;
-  updateClipboardHintVisibility();
-  updateClipboardGlowActive();
-
   if (hintFrame !== null) return;
   hintFrame = requestAnimationFrame(() => {
     hintFrame = null;
-    el.clipboardHint.style.transform = `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`;
+    const zone = state.clipboardHasFiles ? zoneUnderCursor(event.clientX, event.clientY) : null;
 
-    for (const zone of DROP_ZONES) {
-      if (zone.hidden) continue;
-      const rect = zone.getBoundingClientRect();
-      zone.style.setProperty('--spot-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
-      zone.style.setProperty('--spot-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+    el.clipboardHint.hidden = !zone;
+    if (zone) {
+      el.clipboardHint.style.transform = `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`;
+    }
+
+    for (const dropZone of DROP_ZONES) {
+      dropZone.classList.toggle('clipboard-glow-active', dropZone === zone);
+      if (dropZone !== zone) continue;
+      const rect = dropZone.getBoundingClientRect();
+      dropZone.style.setProperty('--spot-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+      dropZone.style.setProperty('--spot-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
     }
   });
 }
 
-/** El cursor salió de la ventana: nada de hint ni spotlight pegados afuera. */
-function handleCursorLeftWindow() {
-  cursorInside = false;
-  updateClipboardHintVisibility();
-  updateClipboardGlowActive();
+/** Nada de hint ni spotlight pegados afuera: sin más `mousemove` que los
+    recalcule, hay que apagarlos a mano. */
+function hideClipboardHint() {
+  el.clipboardHint.hidden = true;
+  for (const zone of DROP_ZONES) zone.classList.remove('clipboard-glow-active');
 }
 
 function setClipboardHasFiles(hasFiles) {
   if (hasFiles === state.clipboardHasFiles) return;
   state.clipboardHasFiles = hasFiles;
-  updateClipboardHintVisibility();
-  updateClipboardGlowActive();
+  if (!hasFiles) hideClipboardHint();
 }
 
 document.addEventListener('mousemove', moveClipboardHint);
 // `mouseleave` en `documentElement` (no en `document`) es lo que de verdad
 // dispara al salir de la ventana: en `document` no burbujea igual. `blur` es
 // el respaldo para cuando el cursor se queda quieto y otra ventana toma foco.
-document.documentElement.addEventListener('mouseleave', handleCursorLeftWindow);
-window.addEventListener('blur', handleCursorLeftWindow);
+document.documentElement.addEventListener('mouseleave', hideClipboardHint);
+window.addEventListener('blur', hideClipboardHint);
 el.clipboardHint.textContent = `${PASTE_SHORTCUT} para pegar`;
 
 /* Sondeo liviano en vez de un hilo de Python empujando eventos: es el mismo
