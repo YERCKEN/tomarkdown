@@ -32,7 +32,6 @@
             class="btn btn-icon btn-quiet"
             data-icon="helpCircle"
             aria-label="Qué hace ToMarkdown"
-            title="Qué hace ToMarkdown"
             aria-haspopup="dialog"
           ></button>
           <button
@@ -41,7 +40,6 @@
             class="btn btn-icon btn-quiet btn-danger"
             data-icon="trash2"
             aria-label="Limpiar la cola"
-            title="Limpiar la cola"
             disabled
           ></button>
         </div>
@@ -190,7 +188,6 @@
             class="btn btn-icon btn-quiet shrink-0"
             data-icon="x"
             aria-label="Cerrar"
-            title="Cerrar"
           ></button>
         </div>
 
@@ -274,7 +271,11 @@
 
     <!-- Hint del atajo de pegar: sigue al cursor, solo visible con algo
          pegable en el portapapeles (ver clipboard_has_files() en app.js). -->
-    <div id="clipboard-hint" class="clipboard-hint" aria-hidden="true" hidden></div>
+    <div id="clipboard-hint" class="hint-chip" aria-hidden="true" hidden></div>
+
+    <!-- Tooltip de los botones icon-only: reusa el aria-label que ya tiene
+         cada uno, posicionado bajo el botón sobre el que está el cursor. -->
+    <div id="icon-tooltip" class="hint-chip" aria-hidden="true" hidden></div>
 
     <script src="icons.js"></script>
     <script src="app.js"></script>

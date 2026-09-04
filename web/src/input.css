@@ -611,11 +611,13 @@
     gap: 5px;
   }
 
-  /* --------------------------------------------------- hint del atajo de pegar
-     Sigue al cursor (posición puesta desde JS con `translate3d`), solo visible
-     mientras `clipboard_has_files()` devuelve true. Sin animación de entrada:
-     aparece y desaparece con el estado del portapapeles, no con el tiempo. */
-  .clipboard-hint {
+  /* -------------------------------------------------------------- hint-chip
+     Chip flotante genérico: lo usa tanto el hint del atajo de pegar (sigue al
+     cursor) como el tooltip de los botones icon-only (posicionado bajo el
+     botón). Los dos se posicionan desde JS con `translate3d`, y los dos son
+     puramente reactivos a un estado (portapapeles / hover), sin animación de
+     entrada por tiempo. */
+  .hint-chip {
     position: fixed;
     top: 0;
     left: 0;
@@ -634,7 +636,7 @@
     pointer-events: none;
   }
 
-  .clipboard-hint[hidden] {
+  .hint-chip[hidden] {
     display: none;
   }
 

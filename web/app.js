@@ -58,6 +58,7 @@ const el = {
   aboutPasteShortcut: document.getElementById('about-paste-shortcut'),
   linkAbout: document.getElementById('link-about'),
   clipboardHint: document.getElementById('clipboard-hint'),
+  iconTooltip: document.getElementById('icon-tooltip'),
 };
 
 // -------------------------------------------------------------------- helpers
@@ -144,7 +145,7 @@ function rowSignature(file) {
 function rowButton({ action, id, iconName, label, loading }) {
   return `<button type="button" class="btn btn-ghost btn-sm btn-icon"
     data-action="${action}" data-id="${esc(id)}"
-    aria-label="${esc(label)}" title="${esc(label)}"${loading ? ' data-loading aria-busy="true"' : ''}
+    aria-label="${esc(label)}"${loading ? ' data-loading aria-busy="true"' : ''}
     >${icon(iconName, ROW_ICON)}${spinnerMarkup(ROW_ICON)}</button>`;
 }
 
@@ -602,6 +603,68 @@ setInterval(async () => {
     // no aparece, pegar con el atajo sigue intentándolo igual.
   }
 }, 600);
+
+// ---------------------------------------------------- tooltips de ícono
+
+/**
+ * Tooltip visual para los botones icon-only. Reusa el `aria-label` que ya
+ * tiene cada uno (accesibilidad, no es texto nuevo), así que no hace falta
+ * duplicar la etiqueta en el HTML. No es el `title` nativo del navegador: en
+ * un WebView embebido su aparición y demora son inconsistentes entre
+ * plataformas, y esto se ve igual en las tres.
+ *
+ * Delegado a nivel documento (no un listener por botón): las filas de la cola
+ * se recrean en cada render, un listener atado a un botón puntual se perdería
+ * apenas esa fila se re-renderiza.
+ */
+function positionIconTooltip(button) {
+  const tooltip = el.iconTooltip;
+  tooltip.textContent = button.getAttribute('aria-label') || '';
+  tooltip.hidden = false;
+
+  // El ancho recién existe una vez visible, por eso se mide después de sacarle
+  // el hidden y no antes.
+  const buttonRect = button.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const margin = 6;
+  const centered = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
+  // Clampeado al viewport: sin esto, el tooltip de un ícono pegado a una
+  // esquina (como «Limpiar la cola») se corta contra el borde de la ventana,
+  // que tiene `overflow: hidden`.
+  const left = Math.max(
+    margin,
+    Math.min(centered, window.innerWidth - tooltipRect.width - margin),
+  );
+
+  tooltip.style.transform = `translate3d(${left}px, ${buttonRect.bottom + 8}px, 0)`;
+}
+
+function hideIconTooltip() {
+  el.iconTooltip.hidden = true;
+}
+
+document.addEventListener('mouseover', (event) => {
+  const button = event.target.closest('.btn-icon[aria-label]');
+  if (button) positionIconTooltip(button);
+});
+
+document.addEventListener('mouseout', (event) => {
+  const button = event.target.closest('.btn-icon[aria-label]');
+  if (button && !button.contains(event.relatedTarget)) hideIconTooltip();
+});
+
+document.addEventListener('focusin', (event) => {
+  const button = event.target.closest('.btn-icon[aria-label]');
+  if (button) positionIconTooltip(button);
+});
+
+document.addEventListener('focusout', (event) => {
+  if (event.target.closest('.btn-icon[aria-label]')) hideIconTooltip();
+});
+
+// Click (o el propio re-render de la fila) puede dejar el tooltip apuntando a
+// un botón que ya no está: más simple ocultarlo siempre que se hace clic.
+document.addEventListener('click', hideIconTooltip);
 
 // ------------------------------------------------------ pantalla «qué hace»
 
