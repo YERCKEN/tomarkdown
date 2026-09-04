@@ -26,6 +26,19 @@ líneas pasan a una sección con número y fecha.
   filas terminadas suman un lavado verde tenue.
 - Una vez guardado, el botón de **volver a guardar** queda disponible junto a
   «Mostrar en el explorador», en vez de reemplazarlo.
+- Con algo copiado en el portapapeles, la zona de arrastre muestra un
+  **spotlight** rojo sutil que sigue al cursor; el hint y el spotlight solo
+  aparecen mientras el cursor está sobre la zona.
+- **Tooltip** para todos los botones icon-only (ayuda, limpiar cola, cerrar,
+  guardar/revelar de cada fila), con el mismo texto que ya tenían como
+  `aria-label`.
+- La ayuda («¿Qué hace ToMarkdown?») aclara que un `.zip` termina en un
+  **único** `.md`, no en uno por archivo interno.
+
+### Changed
+
+- El aviso de archivos rechazados suma margen respecto del footer y un tinte
+  rojo sutil (antes quedaba pegado, sin ningún acento visual).
 
 ### Tests
 
