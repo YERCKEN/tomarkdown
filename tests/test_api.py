@@ -223,3 +223,24 @@ def test_save_all_sin_dialogo_no_escribe_nada(tmp_path, fake_window):
 
     assert result["written"] == 0
     assert list(tmp_path.iterdir()) == []
+
+
+def test_save_all_recuerda_la_carpeta(tmp_path, fake_window):
+    destino = tmp_path / "salida"
+    destino.mkdir()
+
+    api = Api()
+    api.attach(fake_window)
+    _done_entry(api, "id1", "informe.pdf")
+    fake_window.dialog_result = str(destino)
+    api.save_all(["id1"])
+
+    # Segunda vez (otra instancia): el diálogo arranca en la carpeta anterior.
+    otra = Api()
+    otra.attach(fake_window)
+    _done_entry(otra, "id9", "otro.pdf")
+    fake_window.dialog_calls.clear()
+    otra.save_all(["id9"])
+
+    _, kwargs = fake_window.dialog_calls[0]
+    assert kwargs["directory"] == str(destino)

@@ -13,6 +13,7 @@ graph TD;
     HTML["index.html + app.js"] -->|"pywebview.api.*"| API["Api"];
     API --> RUNNER["QueueRunner"];
     API --> CFG["config"];
+    API --> SET["settings"];
     RUNNER --> CONV["converter"];
     CONV --> MD["markitdown"];
     RUNNER -.->|"run_js"| HTML;
@@ -26,6 +27,7 @@ graph TD;
 | `app/converter.py` | Único punto que conoce markitdown. Traduce excepciones a mensajes en español. |
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos. |
 | `app/api.py` | Superficie expuesta al JavaScript. Dueña del estado de la cola. |
+| `app/settings.py` | Preferencias mínimas en disco (`settings.json`). Hoy: la última carpeta de guardado. |
 | `app/main.py` | Crea la ventana, enlaza el arrastre nativo y ofrece `--self-check`. |
 
 > [!IMPORTANT]
