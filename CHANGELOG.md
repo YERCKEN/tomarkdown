@@ -17,11 +17,22 @@ líneas pasan a una sección con número y fecha.
   (`settings.json`, un solo valor, en el dir de config del SO). Nuevo módulo
   `app/settings.py`.
 - `ruff` (lint + formato) configurado y corriendo en CI (`ci.yml`).
+- Pegar archivos con **`Cmd+V`/`Ctrl+V`**, además de arrastrar o «Examinar».
+  Nuevo módulo `app/clipboard.py` (lee el portapapeles nativo del SO, ya que
+  pywebview no expone esto), con `pyobjc`/`pywin32` como dependencias
+  condicionadas por plataforma. Un hint junto al cursor avisa cuando hay algo
+  pegable.
+- Cada fila de la cola muestra un **chip de color** según su estado, y las
+  filas terminadas suman un lavado verde tenue.
+- Una vez guardado, el botón de **volver a guardar** queda disponible junto a
+  «Mostrar en el explorador», en vez de reemplazarlo.
 
 ### Tests
 
 - `test_api.py` cubre `on_native_drop`, el ciclo de estado de `start_conversion`
   y `save_all` (fixture `fake_window`). Nuevo `test_settings.py`.
+- Nuevo `test_clipboard.py`: dispatch por plataforma y manejo de errores del
+  portapapeles nativo.
 
 ## [0.2.0] - 2026-09-03
 
