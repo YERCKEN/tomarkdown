@@ -14,6 +14,8 @@ y la resuelve como promesa.
 | Método | Devuelve | Qué hace |
 |---|---|---|
 | `pick_files()` | `list[FileEntry]` | Abre el diálogo nativo con selección múltiple, filtrado por las extensiones soportadas. Lista vacía si se cancela. |
+| `paste_files()` | `list[FileEntry]` | Agrega los archivos copiados en el portapapeles del sistema (`Cmd+V`/`Ctrl+V` en el front). Lee el portapapeles nativo vía `app/clipboard.py`, ya que pywebview no tiene una API propia para esto. |
+| `clipboard_has_files()` | `bool` | Peek barato: si el portapapeles tiene archivos ahora mismo, sin extraer las rutas. Lo usa el front para mostrar el hint del atajo, sondeando cada pocos cientos de ms. |
 | `add_paths(paths)` | `list[FileEntry]` | Recibe rutas absolutas, descarta duplicados, carpetas y formatos no soportados, y devuelve **solo las aceptadas**. |
 | `get_supported_extensions()` | `list[str]` | La lista viva de extensiones. El front la usa para el estado vacío y para el mensaje de rechazo. |
 | `get_app_info()` | `dict` | `{"name", "version"}` desde `app/config.py`. Lo usa la pantalla «Qué hace ToMarkdown». |
@@ -45,7 +47,7 @@ en `file_ids`.
 
 | Método | Devuelve | Qué hace |
 |---|---|---|
-| `save_one(file_id)` | `str \| None` | Diálogo «guardar como» con el nombre sugerido `<original>.md`. Devuelve la ruta escrita o `None` si se canceló. |
+| `save_one(file_id)` | `str \| None` | Diálogo «guardar como» con el nombre sugerido `<original>.md`. Devuelve la ruta escrita o `None` si se canceló. Se puede llamar más de una vez por archivo: el front deja el botón disponible incluso después de guardarlo. |
 | `save_all(file_ids)` | `dict` | Diálogo de carpeta y escritura de todos los convertidos. |
 
 Los dos diálogos arrancan en la última carpeta usada para guardar, si todavía

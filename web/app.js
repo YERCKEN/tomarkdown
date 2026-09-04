@@ -53,6 +53,7 @@ const el = {
   aboutClose: document.getElementById('btn-about-close'),
   aboutFormats: document.getElementById('about-formats'),
   aboutVersion: document.getElementById('about-version'),
+  aboutPasteShortcut: document.getElementById('about-paste-shortcut'),
   linkAbout: document.getElementById('link-about'),
 };
 
@@ -115,6 +116,11 @@ const ROW_ICON = 'size-3.5 shrink-0';
 const REVEAL_LABEL = /Mac/i.test(navigator.userAgent)
   ? 'Mostrar en Finder'
   : 'Mostrar en el explorador';
+
+/* Mismo criterio que `REVEAL_LABEL`: el atajo de pegar cambia de tecla según
+   el sistema, y es texto de interfaz que no necesita ida y vuelta a Python. */
+const IS_MAC = /Mac/i.test(navigator.userAgent);
+const PASTE_SHORTCUT = IS_MAC ? '⌘V' : 'Ctrl+V';
 
 // --------------------------------------------------------------------- render
 
@@ -411,6 +417,16 @@ async function browse() {
   }
 }
 
+/** Pega los archivos copiados en el portapapeles del sistema, si hay alguno. */
+async function pasteFiles() {
+  try {
+    addFiles(await window.pywebview.api.paste_files());
+  } catch (error) {
+    showNotice('No se pudo leer el portapapeles');
+    console.error(error);
+  }
+}
+
 async function convertOrCancel() {
   if (state.running) {
     await window.pywebview.api.cancel_conversion();
@@ -562,9 +578,14 @@ el.about.addEventListener('click', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
-  if (!state.aboutOpen) return;
-  if (event.key === 'Escape') closeAbout();
-  else trapAboutFocus(event);
+  if (state.aboutOpen) {
+    if (event.key === 'Escape') closeAbout();
+    else trapAboutFocus(event);
+    return;
+  }
+
+  const isPaste = (IS_MAC ? event.metaKey : event.ctrlKey) && event.key.toLowerCase() === 'v';
+  if (isPaste) pasteFiles();
 });
 
 // Punto de entrada por si un menú nativo quiere abrir la pantalla.
@@ -633,6 +654,7 @@ async function init() {
   el.formats.textContent = formatsText;
   el.aboutFormats.textContent = formatsText;
   el.aboutVersion.textContent = `v${info.version}`;
+  el.aboutPasteShortcut.textContent = PASTE_SHORTCUT;
 
   render();
 }

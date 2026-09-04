@@ -21,7 +21,7 @@ from pathlib import Path
 
 import webview
 
-from app import settings
+from app import clipboard, settings
 from app.config import (
     APP_NAME,
     SUPPORTED_EXTENSIONS,
@@ -210,6 +210,26 @@ class Api:
         accepted, rejected = self._accept(_all_paths(result))
         self._emit_rejected(rejected)
         return accepted
+
+    def paste_files(self) -> list[dict]:
+        """Agrega los archivos copiados en el portapapeles del sistema.
+
+        Lee el portapapeles nativo (`app/clipboard.py`): pywebview no tiene una
+        API propia para esto, a diferencia del arrastre.
+
+        :returns: Las entradas aceptadas, o lista vacía si no había archivos.
+        """
+        accepted, rejected = self._accept(clipboard.files_in_clipboard())
+        self._emit_rejected(rejected)
+        return accepted
+
+    def clipboard_has_files(self) -> bool:
+        """Si el portapapeles tiene archivos copiados ahora mismo.
+
+        Peek barato pensado para sondear seguido desde el front (hint del
+        atajo de pegar) sin pagar el costo de resolver rutas en cada chequeo.
+        """
+        return clipboard.has_files_in_clipboard()
 
     def add_paths(self, paths: list[str]) -> list[dict]:
         """Agrega rutas absolutas, descartando duplicados y formatos no soportados.

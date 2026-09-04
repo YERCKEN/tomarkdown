@@ -137,6 +137,51 @@ def test_on_native_drop_ignora_los_duplicados(tmp_path, fake_window):
     assert len(api._entries) == 1
 
 
+# --------------------------------------------------------------- paste_files
+
+
+def test_paste_files_agrega_lo_que_hay_en_el_portapapeles(tmp_path, fake_window, monkeypatch):
+    archivo = tmp_path / "informe.pdf"
+    archivo.write_bytes(b"%PDF-1.4\n")
+    api = Api()
+    api.attach(fake_window)
+    monkeypatch.setattr("app.api.clipboard.files_in_clipboard", lambda: [str(archivo)])
+
+    accepted = api.paste_files()
+
+    assert accepted and accepted[0]["name"] == "informe.pdf"
+    assert list(api._entries.values()) == accepted
+
+
+def test_paste_files_rechaza_formato_no_soportado(tmp_path, fake_window, monkeypatch):
+    malo = tmp_path / "programa.exe"
+    malo.write_bytes(b"MZ")
+    api = Api()
+    api.attach(fake_window)
+    monkeypatch.setattr("app.api.clipboard.files_in_clipboard", lambda: [str(malo)])
+
+    accepted = api.paste_files()
+
+    assert accepted == []
+    rejected = fake_window.events_named("files:rejected")
+    assert rejected and "programa.exe" in rejected[0]["names"]
+
+
+def test_paste_files_sin_nada_copiado(fake_window, monkeypatch):
+    api = Api()
+    api.attach(fake_window)
+    monkeypatch.setattr("app.api.clipboard.files_in_clipboard", lambda: [])
+
+    assert api.paste_files() == []
+    assert fake_window.events_named("files:rejected") == []
+
+
+def test_clipboard_has_files_delega_en_el_modulo_clipboard(monkeypatch):
+    monkeypatch.setattr("app.api.clipboard.has_files_in_clipboard", lambda: True)
+
+    assert Api().clipboard_has_files() is True
+
+
 # ---------------------------------------------------- start_conversion (ciclo)
 
 

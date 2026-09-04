@@ -4,8 +4,8 @@ App de escritorio nativa que convierte documentos a Markdown usando
 [microsoft/markitdown](https://github.com/microsoft/markitdown).
 
 Se instala, se abre con doble clic y se usa sin terminal, sin navegador y sin
-conexión a internet. Arrastras archivos, ves la cola convertirse uno por uno y
-guardas los `.md` donde quieras.
+conexión a internet. Arrastras archivos (o los pegás con `Cmd+V`/`Ctrl+V`), ves
+la cola convertirse uno por uno y guardas los `.md` donde quieras.
 
 <!--
 TODO #14 — capturas de la UI. Especificación en docs/images/README.md.
@@ -384,6 +384,25 @@ Es una grieta deliberada en «sin configuración persistente». El límite es
 explícito: un archivo, valores planos, toda lectura tolera que no exista o esté
 corrupto, y un fallo al escribirlo nunca rompe el guardado del `.md`. Vive en
 [`app/settings.py`](app/settings.py).
+
+</details>
+
+<details>
+<summary><b>Por qué pegar archivos necesita dependencias nativas por plataforma</b></summary>
+
+pywebview no expone ninguna API de portapapeles (verificado contra
+`webview/window.py` de la librería instalada): el truco de `pywebviewFullPath`
+que resuelve rutas reales en el arrastre es específico de ese evento y no
+aplica a «pegar». Para leer archivos copiados de verdad desde Finder o el
+Explorador hace falta hablar con el portapapeles del sistema operativo
+directamente, así que `app/clipboard.py` usa `pyobjc` en macOS y `pywin32` en
+Windows (`pyproject.toml` las instala condicionadas por plataforma, ninguna
+máquina termina con las dos).
+
+Son bindings locales al sistema operativo, sin red de por medio: no rompen
+«offline, sin excepción», solo suman peso al bundle empaquetado de cada
+plataforma. Cualquier fallo al leer el portapapeles devuelve vacío y se loguea,
+nunca rompe la app.
 
 </details>
 

@@ -100,6 +100,7 @@ web/ (index.html + app.js)  --pywebview.api.metodo()-->  app/api.py (clase Api)
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos al front. |
 | `app/api.py` | Superficie expuesta al JS. Dueña del estado de la cola. |
 | `app/settings.py` | Preferencias mínimas en disco (`settings.json`, dir de config del SO). Hoy solo la última carpeta de guardado. Toda lectura tolera archivo ausente/corrupto; escribir nunca rompe el guardado. |
+| `app/clipboard.py` | Lee el portapapeles nativo del SO para pegar archivos con `Cmd+V`/`Ctrl+V`. pywebview no expone esto: usa `pyobjc` en macOS y `pywin32` en Windows (dependencias condicionadas por plataforma en `pyproject.toml`). Cualquier fallo nativo devuelve vacío/`False`, nunca propaga. |
 | `app/main.py` | Crea la ventana, enlaza el drop nativo, ofrece `--self-check`. |
 
 El **contrato completo** (métodos de `Api`, eventos, forma de `FileEntry`) está

@@ -14,6 +14,7 @@ graph TD;
     API --> RUNNER["QueueRunner"];
     API --> CFG["config"];
     API --> SET["settings"];
+    API --> CLIP["clipboard"];
     RUNNER --> CONV["converter"];
     CONV --> MD["markitdown"];
     RUNNER -.->|"run_js"| HTML;
@@ -28,6 +29,7 @@ graph TD;
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos. |
 | `app/api.py` | Superficie expuesta al JavaScript. Dueña del estado de la cola. |
 | `app/settings.py` | Preferencias mínimas en disco (`settings.json`). Hoy: la última carpeta de guardado. |
+| `app/clipboard.py` | Lee el portapapeles nativo del SO (`pyobjc` en macOS, `pywin32` en Windows) para pegar archivos con `Cmd+V`/`Ctrl+V`. pywebview no expone esto. |
 | `app/main.py` | Crea la ventana, enlaza el arrastre nativo y ofrece `--self-check`. |
 
 > [!IMPORTANT]
