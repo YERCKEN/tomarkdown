@@ -7,6 +7,10 @@ dynamic = ["version"]
 dependencies = [
     "pywebview>=6.2.1",
     "markitdown[pdf,docx,pptx,xlsx,xls,outlook]>=0.1.7",
+    # Portapapeles nativo, para pegar archivos con Cmd+V / Ctrl+V (app/clipboard.py).
+    # Bindings locales al SO, sin red de por medio: no rompen el requisito offline.
+    "pyobjc-framework-Cocoa>=10; sys_platform == 'darwin'",
+    "pywin32>=306; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]

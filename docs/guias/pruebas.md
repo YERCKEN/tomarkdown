@@ -46,9 +46,10 @@ compartidos. Sin `__init__.py` (pytest los descubre por nombre).
 |---|---|
 | `test_converter.py` | Conversión real formato por formato (texto, `ipynb`, `xlsx`, `pptx`, PDF), un PDF roto que debe dar `ConversionError`, y la traducción de cada excepción de markitdown a su mensaje en español. |
 | `test_queue_runner.py` | `QueueRunner`: procesa en orden y un archivo con error no detiene la cola; cancelar deja terminar el archivo en curso y marca el resto `cancelled`; no reprocesa lo que ya estaba `done`. |
-| `test_api.py` | Helpers puros (`_extension`, `_first_path`, `_all_paths`, `_unique_md_path`) y la superficie que necesita ventana: `on_native_drop` (agrega entradas, rechaza formatos, descarta duplicados), el ciclo `pending → converting → done\|error` de `start_conversion`, y `save_all` (nombres únicos, cancelar el diálogo no escribe nada). |
+| `test_api.py` | Helpers puros (`_extension`, `_first_path`, `_all_paths`, `_unique_md_path`) y la superficie que necesita ventana: `on_native_drop` (agrega entradas, rechaza formatos, descarta duplicados), `paste_files`/`clipboard_has_files` (con `app.api.clipboard` monkeypatcheado), el ciclo `pending → converting → done\|error` de `start_conversion`, y `save_all` (nombres únicos, cancelar el diálogo no escribe nada). |
 | `test_config.py` | `supported_extensions()` y `file_dialog_filter()`. |
 | `test_settings.py` | `app.settings`: dónde vive `settings.json` por plataforma, ida y vuelta de `save`/`load`, JSON corrupto → `{}`, escribir que falla no lanza, y `last_save_dir` que ignora una carpeta que ya no existe. |
+| `test_clipboard.py` | `app.clipboard`: dispatch por `sys.platform` (macOS, Windows, otra) monkeypatcheando las funciones internas; en el runner donde la librería nativa real está instalada, que un fallo de `AppKit`/`pywin32` se atrapa y no propaga. |
 | `test_main.py` | `_expand_paths` (carpeta → archivos ordenados) y `_self_check` (ok con una carpeta de muestras, falla con un archivo roto o una carpeta vacía); que cada nombre de `CONVERTER_IMPORTS` importe. |
 | `test_bump_version.py` | Núcleo puro de `scripts/bump_version.py`: parseo de `__version__`, los tres saltos de SemVer y el reemplazo de una sola línea. |
 
