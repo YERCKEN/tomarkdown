@@ -10,7 +10,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 APP_NAME = "ToMarkdown"
 APP_ID = "com.yercken.tomarkdown"
