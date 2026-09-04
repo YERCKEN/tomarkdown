@@ -29,6 +29,8 @@ const state = {
   savingAll: false,
   /** true mientras la pantalla «Qué hace ToMarkdown» está abierta */
   aboutOpen: false,
+  /** true mientras el portapapeles tiene archivos pegables (sondeo periódico) */
+  clipboardHasFiles: false,
 };
 
 const el = {
@@ -55,6 +57,7 @@ const el = {
   aboutVersion: document.getElementById('about-version'),
   aboutPasteShortcut: document.getElementById('about-paste-shortcut'),
   linkAbout: document.getElementById('link-about'),
+  clipboardHint: document.getElementById('clipboard-hint'),
 };
 
 // -------------------------------------------------------------------- helpers
@@ -516,6 +519,47 @@ async function clearQueue() {
   el.notice.hidden = true;
   render();
 }
+
+// ------------------------------------------------------- hint de pegar
+
+/**
+ * El hint sigue al cursor (posición puesta acá, visibilidad la decide el
+ * sondeo del portapapeles) y se throttlea con requestAnimationFrame: sin eso,
+ * `mousemove` dispara muchas más veces por segundo de las que hace falta
+ * pintar.
+ */
+let hintFrame = null;
+
+function moveClipboardHint(event) {
+  if (hintFrame !== null) return;
+  hintFrame = requestAnimationFrame(() => {
+    hintFrame = null;
+    el.clipboardHint.style.transform = `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`;
+  });
+}
+
+function setClipboardHasFiles(hasFiles) {
+  if (hasFiles === state.clipboardHasFiles) return;
+  state.clipboardHasFiles = hasFiles;
+  el.clipboardHint.hidden = !hasFiles;
+}
+
+document.addEventListener('mousemove', moveClipboardHint);
+el.clipboardHint.textContent = `${PASTE_SHORTCUT} para pegar`;
+
+/* Sondeo liviano en vez de un hilo de Python empujando eventos: es el mismo
+   patrón que cualquier otra llamada a pywebview.api.*, no suma un segundo
+   modelo de hilo a la app. Se detiene mientras la pantalla de ayuda tapa la
+   ventana, para no pedir nada de más. */
+setInterval(async () => {
+  if (state.aboutOpen) return;
+  try {
+    setClipboardHasFiles(await window.pywebview.api.clipboard_has_files());
+  } catch {
+    // Un fallo del sondeo no es visible para el usuario: el hint simplemente
+    // no aparece, pegar con el atajo sigue intentándolo igual.
+  }
+}, 600);
 
 // ------------------------------------------------------ pantalla «qué hace»
 
