@@ -110,6 +110,9 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
             "/DAppVersion=${{ steps.version.outputs.value }}" `
             packaging\windows\installer.iss
+          # A la raíz del workspace: así el artefacto no anida un dir dist/ y
+          # todos los assets del release quedan planos.
+          Move-Item dist\ToMarkdown-Setup-*.exe .
 
       - name: Publicar artefacto (macOS)
         if: runner.os == 'macOS'
@@ -126,7 +129,7 @@ jobs:
           name: ${{ matrix.artifact }}
           path: |
             ToMarkdown-*-portable.zip
-            dist/ToMarkdown-Setup-*.exe
+            ToMarkdown-Setup-*.exe
           if-no-files-found: error
 
   release:
