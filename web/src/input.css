@@ -531,6 +531,55 @@
     background-color: color-mix(in srgb, var(--color-danger) 14%, transparent);
   }
 
+  /* Para un archivo interno de un zip que ni se intenta: no es un error (no
+     falló nada), es "no aplica", así que va en el mismo gris neutro que
+     `--pending` en vez del rojo de `--error`. */
+  .status-chip--unsupported {
+    @apply bg-raised text-ink-dim;
+  }
+
+  /* ------------------------------------------------------ árbol de un .zip
+     Colapsado por defecto (el botón toggle lo despliega): un zip con cientos
+     de archivos no tiene que inflar la cola de entrada. La indentación por
+     nivel la resuelve el propio anidado de `<ul>`, no hace falta calcular
+     profundidad a mano. */
+  .zip-tree {
+    list-style: none;
+    border-left: 1px solid var(--color-line-soft);
+  }
+
+  .zip-tree-root {
+    margin-left: 45px;
+  }
+
+  .zip-tree .zip-tree {
+    margin-left: 9px;
+    padding-left: 9px;
+  }
+
+  .zip-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0 3px 9px;
+    min-width: 0;
+  }
+
+  .zip-tree-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .zip-tree-toggle svg {
+    transition: transform 120ms ease;
+  }
+
+  .zip-tree-toggle.is-expanded svg {
+    transform: rotate(90deg);
+  }
+
   /* Reemplazo del barrido cuando el sistema pide menos movimiento. */
   .sweep-dot {
     display: none;

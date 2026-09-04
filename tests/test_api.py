@@ -137,6 +137,46 @@ def test_on_native_drop_ignora_los_duplicados(tmp_path, fake_window):
     assert len(api._entries) == 1
 
 
+# ------------------------------------------------------------- zip_contents
+
+
+def test_on_native_drop_lista_el_contenido_de_un_zip(fake_window, make_zip):
+    archivo = make_zip({"notas.txt": b"hola", "foto.png": b"\x89PNG", "vacia/": b""})
+    api = Api()
+    api.attach(fake_window)
+
+    api.on_native_drop(_drop_event([str(archivo)]))
+
+    (entry,) = api._entries.values()
+    assert entry["ext"] == "zip"
+    contents = {member["path"]: member["status"] for member in entry["zip_contents"]}
+    assert contents == {"notas.txt": "pending", "foto.png": "unsupported"}
+
+
+def test_zip_corrupto_no_tiene_zip_contents(tmp_path, fake_window):
+    malo = tmp_path / "roto.zip"
+    malo.write_bytes(b"esto no es un zip")
+    api = Api()
+    api.attach(fake_window)
+
+    api.on_native_drop(_drop_event([str(malo)]))
+
+    (entry,) = api._entries.values()
+    assert entry["zip_contents"] is None
+
+
+def test_archivo_normal_no_lleva_zip_contents(tmp_path, fake_window):
+    archivo = tmp_path / "informe.pdf"
+    archivo.write_bytes(b"%PDF-1.4\n")
+    api = Api()
+    api.attach(fake_window)
+
+    api.on_native_drop(_drop_event([str(archivo)]))
+
+    (entry,) = api._entries.values()
+    assert entry["zip_contents"] is None
+
+
 # --------------------------------------------------------------- paste_files
 
 

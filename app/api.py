@@ -17,6 +17,7 @@ import subprocess
 import sys
 import threading
 import uuid
+import zipfile
 from pathlib import Path
 
 import webview
@@ -61,6 +62,33 @@ def _all_paths(result) -> list[str]:
     return [str(item) for item in result]
 
 
+def _zip_contents(path: str) -> list[dict] | None:
+    """Lista los archivos de un `.zip`, con si cada uno tiene extensión soportada.
+
+    Es un peek liviano con `zipfile` (no convierte nada): permite mostrar el
+    árbol y marcar de antemano qué archivos ni se van a intentar, sin esperar
+    a que termine la conversión real (que markitdown hace de un solo golpe,
+    sin progreso por archivo interno).
+
+    :returns: `None` si el zip no se puede abrir (corrupto, etc.) — la fila
+        simplemente no muestra árbol; la conversión se intenta igual y puede
+        fallar con su propio mensaje.
+    """
+    try:
+        with zipfile.ZipFile(path) as archive:
+            names = [name for name in archive.namelist() if not name.endswith("/")]
+    except (zipfile.BadZipFile, OSError):
+        return None
+
+    return [
+        {
+            "path": name,
+            "status": "pending" if _extension(name) in SUPPORTED_EXTENSIONS else "unsupported",
+        }
+        for name in names
+    ]
+
+
 class Api:
     """Superficie que el front puede invocar."""
 
@@ -103,15 +131,17 @@ class Api:
         except OSError:
             size = 0
 
+        ext = _extension(path)
         return {
             "id": str(uuid.uuid4()),
             "name": os.path.basename(path),
             "path": path,
-            "ext": _extension(path),
+            "ext": ext,
             "size_bytes": size,
             "status": "pending",
             "error": None,
             "saved_to": None,
+            "zip_contents": _zip_contents(path) if ext == "zip" else None,
         }
 
     def _accept(self, paths: list[str]) -> tuple[list[dict], dict[str, list[str]]]:

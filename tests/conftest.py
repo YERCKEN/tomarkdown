@@ -10,7 +10,9 @@ from __future__ import annotations
 import json
 import re
 import threading
+import zipfile
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -77,6 +79,24 @@ def make_pdf() -> Callable[[str], bytes]:
     `--self-check`, para no mantener dos armadores de PDF.
     """
     return minimal_pdf
+
+
+@pytest.fixture
+def make_zip(tmp_path) -> Callable[[dict[str, bytes]], Path]:
+    """Devuelve una función `(archivos) -> Path` que arma un `.zip` en `tmp_path`.
+
+    `archivos` es `{nombre_dentro_del_zip: contenido}`. Reusable entre
+    `test_api.py`, `test_converter.py` y `test_queue_runner.py`.
+    """
+
+    def _build(files: dict[str, bytes], name: str = "muestra.zip") -> Path:
+        path = tmp_path / name
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+            for member_name, content in files.items():
+                archive.writestr(member_name, content)
+        return path
+
+    return _build
 
 
 @pytest.fixture

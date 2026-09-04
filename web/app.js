@@ -31,6 +31,8 @@ const state = {
   aboutOpen: false,
   /** true mientras el portapapeles tiene archivos pegables (sondeo periódico) */
   clipboardHasFiles: false,
+  /** ids de archivo (zips) con el árbol de contenido desplegado */
+  expandedZips: new Set(),
 };
 
 const el = {
@@ -131,13 +133,27 @@ const PASTE_SHORTCUT = IS_MAC ? '⌘V' : 'Ctrl+V';
 /** Cache de nodos ya renderizados, para no recrear filas que no cambiaron. */
 const rowCache = new Map();
 
+/** Firma del árbol de un zip: si está desplegado, más el estado de cada archivo interno. */
+function zipSignature(file) {
+  if (!Array.isArray(file.zip_contents) || file.zip_contents.length === 0) return '';
+  const expanded = state.expandedZips.has(file.id) ? '1' : '0';
+  const members = file.zip_contents.map((member) => `${member.path}:${member.status}`).join(',');
+  return `${expanded}:${members}`;
+}
+
 function rowSignature(file) {
   // El separador es NUL y no un espacio: `saved_to` es una ruta y puede traer
   // espacios, así que un espacio produciría firmas ambiguas. Va como escape
   // `\0` y no como byte crudo, que era invisible al editar el archivo.
   // `saving` es transitorio pero visible: sin él acá la fila reusa el nodo
   // viejo y el spinner no se dibuja nunca.
-  const flags = [file.status, file.error ?? '', file.saved_to ?? '', file.saving ? '1' : ''];
+  const flags = [
+    file.status,
+    file.error ?? '',
+    file.saved_to ?? '',
+    file.saving ? '1' : '',
+    zipSignature(file),
+  ];
   return flags.join('\0');
 }
 
@@ -189,23 +205,100 @@ function statusMarkup(file) {
   }
 }
 
+/**
+ * Agrupa la lista plana `[{path, status}]` de un zip en un árbol de carpetas
+ * y archivos, por segmentos de `/`. Carpetas primero, alfabético dentro de
+ * cada nivel — igual que cualquier explorador de archivos.
+ */
+function buildZipTree(members) {
+  const root = new Map();
+
+  for (const member of members) {
+    let level = root;
+    const parts = member.path.split('/').filter(Boolean);
+
+    parts.forEach((part, index) => {
+      if (index === parts.length - 1) {
+        level.set(`file:${part}`, { type: 'file', name: part, status: member.status });
+        return;
+      }
+      const key = `dir:${part}`;
+      if (!level.has(key)) level.set(key, { type: 'folder', name: part, children: new Map() });
+      level = level.get(key).children;
+    });
+  }
+
+  const sorted = (map) =>
+    [...map.values()]
+      .map((node) => (node.type === 'folder' ? { ...node, children: sorted(node.children) } : node))
+      .sort((a, b) =>
+        a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1,
+      );
+
+  return sorted(root);
+}
+
+const ZIP_STATUS_LABEL = {
+  pending: 'en espera',
+  done: 'listo',
+  error: 'error',
+  unsupported: 'no soportado',
+};
+
+function zipTreeNodeMarkup(node) {
+  if (node.type === 'folder') {
+    return `<li>
+      <span class="zip-tree-row"
+        >${icon('folder', 'size-3.5 shrink-0 text-ink-dim')}<span class="zip-tree-name text-[12.5px] text-ink-muted"
+        >${esc(node.name)}</span></span
+      ><ul class="zip-tree">${node.children.map(zipTreeNodeMarkup).join('')}</ul>
+    </li>`;
+  }
+
+  return `<li>
+    <span class="zip-tree-row"
+      ><span class="zip-tree-name font-mono text-[12px] text-ink-muted">${esc(node.name)}</span
+      ><span class="status-chip status-chip--${node.status}"
+        >${esc(ZIP_STATUS_LABEL[node.status] ?? node.status)}</span
+      ></span>
+  </li>`;
+}
+
 function buildRow(file) {
   const [head, tail] = splitName(file.name);
   const row = document.createElement('li');
-  row.className =
-    'flex items-center gap-3 border-b border-line-soft px-5 py-2.5 transition-colors duration-150';
+  row.className = 'border-b border-line-soft transition-colors duration-150';
   if (file.status === 'converting') row.classList.add('row-active');
   else if (file.status === 'done') row.classList.add('row-done');
 
+  const hasZipTree = file.ext === 'zip' && Array.isArray(file.zip_contents) && file.zip_contents.length > 0;
+  const expanded = hasZipTree && state.expandedZips.has(file.id);
+
+  const toggleButton = hasZipTree
+    ? `<button type="button" class="btn btn-ghost btn-sm btn-icon zip-tree-toggle${expanded ? ' is-expanded' : ''}"
+        data-action="toggle-zip" data-id="${esc(file.id)}"
+        aria-label="${expanded ? 'Contraer el contenido del zip' : 'Ver el contenido del zip'}"
+        aria-expanded="${expanded}"
+        >${icon('chevronRight', ROW_ICON)}</button>`
+    : '';
+
   row.innerHTML = `
-    <span class="ext-badge">${esc(file.ext)}</span>
-    <span class="filename min-w-0 flex-1 text-[13px] text-ink" title="${esc(file.name)}"
-      ><span class="filename-head">${esc(head)}</span
-      ><span class="filename-tail">${esc(tail)}</span></span>
-    <span class="w-16 shrink-0 text-right font-mono text-[11.5px] text-ink-dim tabular-nums"
-      >${esc(formatSize(file.size_bytes))}</span>
-    <span class="flex w-44 shrink-0 items-center justify-end gap-2 overflow-hidden"
-      >${statusMarkup(file)}</span>`;
+    <div class="flex items-center gap-3 px-5 py-2.5">
+      ${toggleButton}
+      <span class="ext-badge">${esc(file.ext)}</span>
+      <span class="filename min-w-0 flex-1 text-[13px] text-ink" title="${esc(file.name)}"
+        ><span class="filename-head">${esc(head)}</span
+        ><span class="filename-tail">${esc(tail)}</span></span>
+      <span class="w-16 shrink-0 text-right font-mono text-[11.5px] text-ink-dim tabular-nums"
+        >${esc(formatSize(file.size_bytes))}</span>
+      <span class="flex w-44 shrink-0 items-center justify-end gap-2 overflow-hidden"
+        >${statusMarkup(file)}</span>
+    </div>${
+      hasZipTree
+        ? `<ul class="zip-tree zip-tree-root pb-2.5"${expanded ? '' : ' hidden'}
+            >${buildZipTree(file.zip_contents).map(zipTreeNodeMarkup).join('')}</ul>`
+        : ''
+    }`;
 
   return row;
 }
@@ -362,6 +455,9 @@ window.toMarkdown = {
         if (file) {
           file.status = 'done';
           file.error = null;
+          // Reconciliado del lado Python: pending pasa a done/error según si
+          // el archivo apareció de verdad en el resultado del zip.
+          if (payload.zip_contents) file.zip_contents = payload.zip_contents;
         }
         break;
       }
@@ -371,6 +467,7 @@ window.toMarkdown = {
         if (file) {
           file.status = 'error';
           file.error = payload.error;
+          if (payload.zip_contents) file.zip_contents = payload.zip_contents;
         }
         break;
       }
@@ -519,6 +616,7 @@ async function clearQueue() {
   state.running = false;
   state.completed = 0;
   state.total = 0;
+  state.expandedZips.clear();
   el.notice.hidden = true;
   render();
 }
@@ -740,12 +838,20 @@ document.addEventListener('keydown', (event) => {
 // Punto de entrada por si un menú nativo quiere abrir la pantalla.
 window.toMarkdown.openAbout = openAbout;
 
+/** Despliega o contrae el árbol de contenido de un zip. */
+function toggleZipTree(id) {
+  if (state.expandedZips.has(id)) state.expandedZips.delete(id);
+  else state.expandedZips.add(id);
+  render();
+}
+
 el.queue.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
   if (!button) return;
 
   if (button.dataset.action === 'save') saveOne(button.dataset.id);
   else if (button.dataset.action === 'reveal') reveal(button.dataset.id);
+  else if (button.dataset.action === 'toggle-zip') toggleZipTree(button.dataset.id);
 });
 
 /*

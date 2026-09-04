@@ -107,11 +107,34 @@ vienen del disco del usuario y traen espacios, comillas y acentos.
   "size_bytes": 2481923,
   "status": "pending",
   "error": null,
-  "saved_to": null
+  "saved_to": null,
+  "zip_contents": null
 }
 ```
 
 `status` es uno de: `pending`, `converting`, `done`, `error`, `cancelled`.
+
+### `zip_contents`
+
+`null` salvo que `ext` sea `"zip"`. En ese caso, o bien `null` (el zip no se
+pudo abrir con `zipfile`, está corrupto) o una lista de
+`{"path": str, "status": str}`, una por cada archivo dentro del zip
+(las carpetas no llevan entrada propia, se deducen de los `/` en `path`).
+
+`status` de un miembro es uno de: `pending`, `done`, `error`, `unsupported`.
+Se arma en dos tiempos, porque markitdown convierte el `.zip` entero en una
+sola llamada y no expone progreso por archivo interno:
+
+1. Al crear la entrada (`pick_files`, `on_native_drop`, `add_paths`,
+   `paste_files`): cada archivo del zip queda `pending` si su extensión está
+   en `SUPPORTED_EXTENSIONS`, o `unsupported` si no — sin abrir el zip de
+   verdad, solo lista sus nombres.
+2. Cuando el `.zip` (como entrada única) termina de convertirse: los eventos
+   `item:done`/`item:error` traen `zip_contents` ya reconciliado. markitdown
+   arma cada archivo incluido como una sección `## File: <nombre>`
+   (`ZipConverter`); lo que sigue `pending` y no aparece ahí pasa a `error`
+   (era soportado por extensión pero markitdown lo saltó igual, o el zip
+   entero falló). `unsupported` no cambia: nunca se intentó.
 
 ---
 
@@ -126,8 +149,8 @@ archivo.
 |---|---|---|
 | `queue:start` | `{total}` | Al arrancar la cola |
 | `item:start` | `{id}` | Empieza un archivo |
-| `item:done` | `{id, chars}` | Terminó bien, `chars` es el largo del Markdown |
-| `item:error` | `{id, error}` | Falló, con mensaje legible |
+| `item:done` | `{id, chars, zip_contents}` | Terminó bien, `chars` es el largo del Markdown. `zip_contents` va reconciliado (ver [`zip_contents`](#zip_contents)), `null` si no es un zip |
+| `item:error` | `{id, error, zip_contents}` | Falló, con mensaje legible. `zip_contents` igual que arriba: todo lo `pending` pasa a `error` |
 | `queue:progress` | `{completed, total}` | Después de cada archivo |
 | `queue:done` | `{completed, failed, cancelled}` | Terminó todo |
 | `files:added` | `{files}` | Llegaron archivos por arrastre nativo |
