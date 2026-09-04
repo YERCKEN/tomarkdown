@@ -8,13 +8,12 @@ conexión a internet. Arrastras archivos, ves la cola convertirse uno por uno y
 guardas los `.md` donde quieras.
 
 <!--
-TODO #14 — capturas de la UI. Guardarlas en docs/images/ y descomentar:
+TODO #14 — capturas de la UI. Especificación en docs/images/README.md.
+Cuando las tres imágenes estén en docs/images/, descomentar este bloque:
 
 | Cola vacía | Conversión en curso | Resultado |
 |---|---|---|
-| ![Cola vacía](docs/images/cola-vacia.png) | ![Conversión en curso](docs/images/convirtiendo.png) | ![Resultado](docs/images/resultado.png) |
-
-![Flujo: arrastrar, convertir, guardar](docs/images/flujo.gif)
+| ![Cola vacía, con la zona de arrastre](docs/images/cola-vacia.png) | ![Cola con archivos convirtiéndose](docs/images/convirtiendo.png) | ![Cola con todo convertido, listo para guardar](docs/images/resultado.png) |
 -->
 
 > [!NOTE]
