@@ -66,9 +66,7 @@ def convert(path: str) -> str:
         ) from None
     except Exception as exc:  # noqa: BLE001 - la cola no puede caerse por un archivo
         logger.exception("🔴 Error inesperado convirtiendo %s", target.name)
-        raise ConversionError(
-            f"No se pudo convertir el archivo ({type(exc).__name__})"
-        ) from None
+        raise ConversionError(f"No se pudo convertir el archivo ({type(exc).__name__})") from None
 
     # `markdown` es el atributo real desde markitdown 0.1.x; `text_content` quedó
     # como alias suave. Se leen los dos por si cambia el orden de deprecación.

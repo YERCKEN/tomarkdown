@@ -155,7 +155,9 @@ class Api:
 
         if not paths:
             if files:
-                logger.warning("⚠️ El drop no trajo rutas absolutas, %d archivos ignorados", len(files))
+                logger.warning(
+                    "⚠️ El drop no trajo rutas absolutas, %d archivos ignorados", len(files)
+                )
                 self._emit("files:rejected", {"names": [f.get("name", "?") for f in files]})
             return
 

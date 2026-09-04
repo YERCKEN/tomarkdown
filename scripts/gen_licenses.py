@@ -36,7 +36,7 @@ SUPPLEMENT = {
         "LICENSE (MIT)",
         "MIT License\n\n"
         "Copyright (c) Microsoft Corporation.\n\n"
-        'Permission is hereby granted, free of charge, to any person obtaining a copy\n'
+        "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
         'of this software and associated documentation files (the "Software"), to deal\n'
         "in the Software without restriction, including without limitation the rights\n"
         "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
@@ -57,11 +57,7 @@ SUPPLEMENT = {
 
 def runtime_packages() -> list[str]:
     """Todo lo instalado menos las herramientas de desarrollo (ver `DEV_ONLY`)."""
-    names = {
-        dist.metadata["Name"]
-        for dist in metadata.distributions()
-        if dist.metadata["Name"]
-    }
+    names = {dist.metadata["Name"] for dist in metadata.distributions() if dist.metadata["Name"]}
     return sorted(
         (n for n in names if n.lower().replace("_", "-") not in DEV_ONLY),
         key=str.lower,

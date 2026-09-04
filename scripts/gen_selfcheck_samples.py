@@ -67,8 +67,7 @@ def minimal_pdf(text: str) -> bytes:
     for offset in offsets:
         out += f"{offset:010d} 00000 n \n".encode()
     out += (
-        f"trailer<</Size {len(objects) + 1}/Root 1 0 R>>\n"
-        f"startxref\n{xref_at}\n%%EOF\n"
+        f"trailer<</Size {len(objects) + 1}/Root 1 0 R>>\nstartxref\n{xref_at}\n%%EOF\n"
     ).encode()
 
     return bytes(out)
