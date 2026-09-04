@@ -14,7 +14,7 @@ y la resuelve como promesa.
 | Método | Devuelve | Qué hace |
 |---|---|---|
 | `pick_files()` | `list[FileEntry]` | Abre el diálogo nativo con selección múltiple, filtrado por las extensiones soportadas. Lista vacía si se cancela. |
-| `add_paths(paths)` | `list[FileEntry]` | Recibe rutas absolutas, descarta duplicados y formatos no soportados, y devuelve **solo las aceptadas**. |
+| `add_paths(paths)` | `list[FileEntry]` | Recibe rutas absolutas, descarta duplicados, carpetas y formatos no soportados, y devuelve **solo las aceptadas**. |
 | `get_supported_extensions()` | `list[str]` | La lista viva de extensiones. El front la usa para el estado vacío y para el mensaje de rechazo. |
 | `get_app_info()` | `dict` | `{"name", "version"}` desde `app/config.py`. Lo usa la pantalla «Qué hace ToMarkdown». |
 
@@ -126,7 +126,7 @@ archivo.
 | `queue:progress` | `{completed, total}` | Después de cada archivo |
 | `queue:done` | `{completed, failed, cancelled}` | Terminó todo |
 | `files:added` | `{files}` | Llegaron archivos por arrastre nativo |
-| `files:rejected` | `{names}` | Se descartaron por formato no soportado |
+| `files:rejected` | `{names, folders}` | Algo quedó afuera: `names` son archivos con formato no soportado, `folders` son carpetas soltadas. Cualquiera de los dos puede venir vacío. |
 | `save:error` | `{id, error}` | No se pudo escribir un archivo, o `reveal` no encontró el guardado |
 
 En `queue:progress`, `completed` cuenta **procesados** (convertidos más

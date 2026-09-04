@@ -113,13 +113,17 @@ class Api:
             "saved_to": None,
         }
 
-    def _accept(self, paths: list[str]) -> tuple[list[dict], list[str]]:
+    def _accept(self, paths: list[str]) -> tuple[list[dict], dict[str, list[str]]]:
         """Filtra rutas y crea las entradas aceptadas.
 
-        :returns: (entradas aceptadas, nombres rechazados por formato)
+        :returns: `(aceptadas, rechazadas)`, donde `rechazadas` es
+            `{"names": [...], "folders": [...]}`: nombres de archivo con formato
+            no soportado y nombres de carpeta soltada. Un duplicado o una ruta
+            que ya no existe se descartan sin avisar.
         """
         accepted: list[dict] = []
-        rejected: list[str] = []
+        names: list[str] = []
+        folders: list[str] = []
 
         with self._lock:
             for raw in paths:
@@ -128,11 +132,13 @@ class Api:
 
                 path = os.path.realpath(os.path.expanduser(str(raw)))
                 if not os.path.isfile(path):
+                    if os.path.isdir(path):
+                        folders.append(os.path.basename(path))
                     continue
                 if path in self._known_paths:
                     continue
                 if _extension(path) not in SUPPORTED_EXTENSIONS:
-                    rejected.append(os.path.basename(path))
+                    names.append(os.path.basename(path))
                     continue
 
                 entry = self._make_entry(path)
@@ -140,7 +146,17 @@ class Api:
                 self._known_paths.add(path)
                 accepted.append(entry)
 
-        return accepted, rejected
+        # Sin duplicados: soltar la misma carpeta (o el mismo .exe) dos veces no
+        # tiene que repetir el nombre en el aviso.
+        return accepted, {
+            "names": list(dict.fromkeys(names)),
+            "folders": list(dict.fromkeys(folders)),
+        }
+
+    def _emit_rejected(self, rejected: dict[str, list[str]]) -> None:
+        """Emite `files:rejected` solo si hay algo que informar."""
+        if rejected["names"] or rejected["folders"]:
+            self._emit("files:rejected", rejected)
 
     def on_native_drop(self, event: dict) -> None:
         """Handler del drop nativo de pywebview.
@@ -164,8 +180,7 @@ class Api:
         accepted, rejected = self._accept(paths)
         if accepted:
             self._emit("files:added", {"files": accepted})
-        if rejected:
-            self._emit("files:rejected", {"names": rejected})
+        self._emit_rejected(rejected)
 
     # --------------------------------------------------- selección de archivos
 
@@ -192,8 +207,7 @@ class Api:
             file_types=file_dialog_filter(),
         )
         accepted, rejected = self._accept(_all_paths(result))
-        if rejected:
-            self._emit("files:rejected", {"names": rejected})
+        self._emit_rejected(rejected)
         return accepted
 
     def add_paths(self, paths: list[str]) -> list[dict]:
@@ -202,8 +216,7 @@ class Api:
         :returns: Solo las entradas aceptadas.
         """
         accepted, rejected = self._accept(list(paths or []))
-        if rejected:
-            self._emit("files:rejected", {"names": rejected})
+        self._emit_rejected(rejected)
         return accepted
 
     def clear(self) -> list[str]:

@@ -111,6 +111,20 @@ def test_on_native_drop_rechaza_formato_no_soportado(tmp_path, fake_window):
     assert rejected and "programa.exe" in rejected[0]["names"]
 
 
+def test_on_native_drop_avisa_al_soltar_una_carpeta(tmp_path, fake_window):
+    carpeta = tmp_path / "mis documentos"
+    carpeta.mkdir()
+    api = Api()
+    api.attach(fake_window)
+
+    api.on_native_drop(_drop_event([str(carpeta)]))
+
+    assert api._entries == {}
+    rejected = fake_window.events_named("files:rejected")
+    assert rejected and "mis documentos" in rejected[0]["folders"]
+    assert rejected[0]["names"] == []
+
+
 def test_on_native_drop_ignora_los_duplicados(tmp_path, fake_window):
     archivo = tmp_path / "informe.pdf"
     archivo.write_bytes(b"%PDF-1.4\n")
