@@ -264,6 +264,11 @@
   .dashed-zone {
     --dash-color: var(--color-line);
     position: relative;
+    /* `isolate` mete al spotlight (z-index negativo) en el mismo contexto de
+       apilado de la zona: sin esto, un z-index negativo se escapa al contexto
+       del ancestro y puede terminar detrás de OTRAS secciones de la ventana,
+       no solo detrás de su propio contenido. */
+    isolation: isolate;
   }
 
   .dash-frame {
@@ -290,6 +295,30 @@
 
   .dashed-zone.is-dragging {
     --dash-color: var(--color-primary);
+  }
+
+  /* Spotlight que sigue al cursor cuando hay archivos copiados: un aviso sutil
+     de que la zona también acepta pegar, no solo arrastrar. La posición la
+     pone `app.js` en `--spot-x`/`--spot-y` (mousemove sobre la zona);
+     `z-index: -1` + `isolation: isolate` en `.dashed-zone` lo mandan detrás de
+     todo el contenido real sin tocar el resto de la sección. */
+  .clipboard-spotlight {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+    background: radial-gradient(
+      260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in srgb, var(--color-primary) 32%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  .dashed-zone.clipboard-glow-active .clipboard-spotlight {
+    opacity: 1;
   }
 
   /* El estado vacío es la única pantalla con lugar para respirar, y la que hace
