@@ -99,6 +99,7 @@ web/ (index.html + app.js)  --pywebview.api.metodo()-->  app/api.py (clase Api)
 | `app/converter.py` | Único punto que conoce markitdown. Instancia única de `MarkItDown`, `convert_local()` (no `convert()`), traduce excepciones a `ConversionError` con mensaje en español. |
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos al front. |
 | `app/api.py` | Superficie expuesta al JS. Dueña del estado de la cola. |
+| `app/settings.py` | Preferencias mínimas en disco (`settings.json`, dir de config del SO). Hoy solo la última carpeta de guardado. Toda lectura tolera archivo ausente/corrupto; escribir nunca rompe el guardado. |
 | `app/main.py` | Crea la ventana, enlaza el drop nativo, ofrece `--self-check`. |
 
 El **contrato completo** (métodos de `Api`, eventos, forma de `FileEntry`) está

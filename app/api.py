@@ -21,6 +21,7 @@ from pathlib import Path
 
 import webview
 
+from app import settings
 from app.config import (
     APP_NAME,
     SUPPORTED_EXTENSIONS,
@@ -259,6 +260,7 @@ class Api:
 
         result = window.create_file_dialog(
             webview.FileDialog.SAVE,
+            directory=settings.last_save_dir() or "",
             save_filename=f"{Path(entry['name']).stem}.md",
             file_types=("Markdown (*.md)", "Todos los archivos (*.*)"),
         )
@@ -274,6 +276,7 @@ class Api:
             return None
 
         entry["saved_to"] = target
+        settings.remember_save_dir(os.path.dirname(target))
         logger.info("✅ Guardado %s", target)
         return target
 
@@ -303,10 +306,16 @@ class Api:
         if not ready:
             return empty
 
-        folder = _first_path(window.create_file_dialog(webview.FileDialog.FOLDER))
+        folder = _first_path(
+            window.create_file_dialog(
+                webview.FileDialog.FOLDER,
+                directory=settings.last_save_dir() or "",
+            )
+        )
         if not folder:
             return empty
 
+        settings.remember_save_dir(folder)
         destination = Path(folder)
         written = 0
         failed: list[str] = []

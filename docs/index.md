@@ -37,6 +37,7 @@ mindmap
       converter
       queue_runner
       api
+      settings
       main
     Front
       index.html

@@ -47,6 +47,9 @@ en `file_ids`.
 |---|---|---|
 | `save_one(file_id)` | `str \| None` | Diálogo «guardar como» con el nombre sugerido `<original>.md`. Devuelve la ruta escrita o `None` si se canceló. |
 | `save_all(file_ids)` | `dict` | Diálogo de carpeta y escritura de todos los convertidos. |
+
+Los dos diálogos arrancan en la última carpeta usada para guardar, si todavía
+existe (`app/settings.py`). Tras guardar, esa carpeta queda recordada.
 | `reveal(file_id)` | `bool` | Abre el explorador del sistema con el `.md` ya guardado seleccionado. |
 
 `save_all` devuelve

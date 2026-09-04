@@ -372,6 +372,22 @@ la cola sigue.
 
 </details>
 
+<details>
+<summary><b>Qué se guarda en disco (y qué no)</b></summary>
+
+Casi nada. La única preferencia que sobrevive al cierre es **la última carpeta
+de guardado**: un `settings.json` con un solo valor, en el directorio de
+configuración del sistema (`~/Library/Application Support/ToMarkdown` en macOS,
+`%LOCALAPPDATA%\ToMarkdown` en Windows). Sirve para que el diálogo de «Guardar»
+no arranque siempre de cero.
+
+Es una grieta deliberada en «sin configuración persistente». El límite es
+explícito: un archivo, valores planos, toda lectura tolera que no exista o esté
+corrupto, y un fallo al escribirlo nunca rompe el guardado del `.md`. Vive en
+[`app/settings.py`](app/settings.py).
+
+</details>
+
 ---
 
 ## Fuera de alcance
@@ -383,7 +399,8 @@ Anotado a propósito, para no meterlo sin querer:
 - Conversión de URLs y YouTube
 - Historial de conversiones
 - Auto update
-- Configuración persistente
+- Configuración persistente, salvo **un** valor: la última carpeta de guardado
+  (ver [Decisiones técnicas](#decisiones-técnicas))
 
 ---
 

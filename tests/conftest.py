@@ -59,6 +59,16 @@ def fake_window() -> FakeWindow:
     return FakeWindow()
 
 
+@pytest.fixture(autouse=True)
+def _isolate_settings(tmp_path, monkeypatch):
+    """Ningún test escribe en el `settings.json` real del sistema.
+
+    Redirige `app.settings._settings_file` a `tmp_path`; `_config_dir` queda
+    intacto para que `test_settings.py` pueda probar su lógica de plataforma.
+    """
+    monkeypatch.setattr("app.settings._settings_file", lambda: tmp_path / "settings.json")
+
+
 @pytest.fixture
 def make_pdf() -> Callable[[str], bytes]:
     """Devuelve la función que arma un PDF válido mínimo con una línea de texto.
