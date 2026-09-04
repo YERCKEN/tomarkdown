@@ -44,9 +44,9 @@ compartidos. Sin `__init__.py` (pytest los descubre por nombre).
 
 | Archivo | Cubre |
 |---|---|
-| `test_converter.py` | Conversión real formato por formato (texto, `ipynb`, `xlsx`, `pptx`, PDF), un PDF roto que debe dar `ConversionError`, y la traducción de cada excepción de markitdown a su mensaje en español. |
-| `test_queue_runner.py` | `QueueRunner`: procesa en orden y un archivo con error no detiene la cola; cancelar deja terminar el archivo en curso y marca el resto `cancelled`; no reprocesa lo que ya estaba `done`. |
-| `test_api.py` | Helpers puros (`_extension`, `_first_path`, `_all_paths`, `_unique_md_path`) y la superficie que necesita ventana: `on_native_drop` (agrega entradas, rechaza formatos, descarta duplicados), `paste_files`/`clipboard_has_files` (con `app.api.clipboard` monkeypatcheado), el ciclo `pending → converting → done\|error` de `start_conversion`, y `save_all` (nombres únicos, cancelar el diálogo no escribe nada). |
+| `test_converter.py` | Conversión real formato por formato (texto, `ipynb`, `xlsx`, `pptx`, PDF), un PDF roto que debe dar `ConversionError`, la traducción de cada excepción de markitdown a su mensaje en español, y `included_zip_members()` (secciones `## File:` de un Markdown de ejemplo). |
+| `test_queue_runner.py` | `QueueRunner`: procesa en orden y un archivo con error no detiene la cola; cancelar deja terminar el archivo en curso y marca el resto `cancelled`; no reprocesa lo que ya estaba `done`; reconcilia `zip_contents` tanto si el zip termina bien (algunos miembros faltan en el resultado) como si falla entero. |
+| `test_api.py` | Helpers puros (`_extension`, `_first_path`, `_all_paths`, `_unique_md_path`) y la superficie que necesita ventana: `on_native_drop` (agrega entradas, rechaza formatos, descarta duplicados, lista `zip_contents` de un zip armado con `make_zip`), `paste_files`/`clipboard_has_files` (con `app.api.clipboard` monkeypatcheado), el ciclo `pending → converting → done\|error` de `start_conversion`, y `save_all` (nombres únicos, cancelar el diálogo no escribe nada). |
 | `test_config.py` | `supported_extensions()` y `file_dialog_filter()`. |
 | `test_settings.py` | `app.settings`: dónde vive `settings.json` por plataforma, ida y vuelta de `save`/`load`, JSON corrupto → `{}`, escribir que falla no lanza, y `last_save_dir` que ignora una carpeta que ya no existe. |
 | `test_clipboard.py` | `app.clipboard`: dispatch por `sys.platform` (macOS, Windows, otra) monkeypatcheando las funciones internas; en el runner donde la librería nativa real está instalada, que un fallo de `AppKit`/`pywin32` se atrapa y no propaga. |
@@ -58,6 +58,7 @@ compartidos. Sin `__init__.py` (pytest los descubre por nombre).
 | Fixture | Da |
 |---|---|
 | `make_pdf` | La función `minimal_pdf` de `scripts/gen_selfcheck_samples.py`: `(texto) -> bytes` con un PDF válido mínimo, sin depender de una librería de PDF. |
+| `make_zip` | Una función `(archivos) -> Path` que arma un `.zip` en `tmp_path` (`{nombre: bytes}` por cada entrada). |
 | `make_entries` | Una función `(n) -> dict` con `n` entradas de cola sintéticas ya normalizadas. |
 | `fake_window` | Una `FakeWindow`: ventana de pywebview de mentira con `run_js` (parsea los `onEvent` y los apila en `.events`) y `create_file_dialog` (devuelve `.dialog_result`, registra las llamadas). Para probar `Api` sin abrir nada. |
 | `run_queue` | Arranca `QueueRunner` con un `convert` falso (parchea `app.queue_runner.convert` con `monkeypatch`), recoge los eventos y permite un callback `during` entre el `start` y el `join` — así la cancelación se prueba en un punto exacto. |

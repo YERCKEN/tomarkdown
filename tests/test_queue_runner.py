@@ -7,6 +7,22 @@ import threading
 from app.converter import ConversionError
 
 
+def _zip_entry(zip_contents):
+    return {
+        "id-0": {
+            "id": "id-0",
+            "name": "muestra.zip",
+            "path": "/tmp/muestra.zip",
+            "ext": "zip",
+            "size_bytes": 100,
+            "status": "pending",
+            "error": None,
+            "saved_to": None,
+            "zip_contents": zip_contents,
+        }
+    }
+
+
 def test_procesa_en_orden_y_aisla_errores(make_entries, run_queue):
     entries = make_entries(4)
     order: list[str] = []
@@ -80,3 +96,42 @@ def test_no_reconvierte_lo_ya_hecho(make_entries, run_queue):
 
     assert "/tmp/archivo-1.pdf" not in seen
     assert events[0] == {"event": "queue:start", "total": 2}
+
+
+# ------------------------------------------------------- reconciliar zip_contents
+
+
+def test_reconcilia_zip_contents_con_exito(run_queue):
+    entries = _zip_entry(
+        [
+            {"path": "notas.txt", "status": "pending"},
+            {"path": "foto.png", "status": "unsupported"},
+            {"path": "roto.pdf", "status": "pending"},
+        ]
+    )
+
+    def fake_convert(_path: str) -> str:
+        return "## File: notas.txt\n\ncontenido\n"
+
+    run_queue(entries, fake_convert)
+
+    contents = {m["path"]: m["status"] for m in entries["id-0"]["zip_contents"]}
+    assert contents == {"notas.txt": "done", "foto.png": "unsupported", "roto.pdf": "error"}
+
+
+def test_reconcilia_zip_contents_si_falla_el_zip_entero(run_queue):
+    entries = _zip_entry(
+        [
+            {"path": "notas.txt", "status": "pending"},
+            {"path": "foto.png", "status": "unsupported"},
+        ]
+    )
+
+    def fake_convert(_path: str) -> str:
+        raise ConversionError("no se pudo leer el archivo")
+
+    run_queue(entries, fake_convert)
+
+    contents = {m["path"]: m["status"] for m in entries["id-0"]["zip_contents"]}
+    # El no-soportado sigue así: nunca se intentó, no falló.
+    assert contents == {"notas.txt": "error", "foto.png": "unsupported"}

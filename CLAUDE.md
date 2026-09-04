@@ -96,7 +96,7 @@ web/ (index.html + app.js)  --pywebview.api.metodo()-->  app/api.py (clase Api)
 | Módulo | Responsabilidad |
 |---|---|
 | `app/config.py` | **Fuente única de verdad**: nombre, `__version__`, tamaños de ventana, `SUPPORTED_EXTENSIONS`. Lo leen `main.py`, `api.py`, `build.spec` y `pyproject.toml` (hatchling). |
-| `app/converter.py` | Único punto que conoce markitdown. Instancia única de `MarkItDown`, `convert_local()` (no `convert()`), traduce excepciones a `ConversionError` con mensaje en español. |
+| `app/converter.py` | Único punto que conoce markitdown. Instancia única de `MarkItDown`, `convert_local()` (no `convert()`), traduce excepciones a `ConversionError` con mensaje en español. `included_zip_members()` interpreta el resultado de un `.zip` (secciones `## File: <nombre>` de `ZipConverter`) para reconciliar el estado de cada archivo interno. |
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos al front. |
 | `app/api.py` | Superficie expuesta al JS. Dueña del estado de la cola. |
 | `app/settings.py` | Preferencias mínimas en disco (`settings.json`, dir de config del SO). Hoy solo la última carpeta de guardado. Toda lectura tolera archivo ausente/corrupto; escribir nunca rompe el guardado. |

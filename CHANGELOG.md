@@ -34,6 +34,11 @@ líneas pasan a una sección con número y fecha.
   `aria-label`.
 - La ayuda («¿Qué hace ToMarkdown?») aclara que un `.zip` termina en un
   **único** `.md`, no en uno por archivo interno.
+- La fila de un `.zip` puede desplegar el **árbol de su contenido** (carpetas y
+  archivos), con el estado de cada archivo interno: `en espera`/`no soportado`
+  antes de convertir (según su extensión), y `listo`/`error` una vez que el
+  zip entero termina (markitdown no expone progreso por archivo interno, así
+  que es un salto de estado, no una barra en vivo).
 
 ### Changed
 

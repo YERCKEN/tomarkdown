@@ -11,7 +11,7 @@ import logging
 import threading
 from collections.abc import Callable
 
-from app.converter import ConversionError, convert
+from app.converter import ConversionError, convert, included_zip_members
 
 logger = logging.getLogger(__name__)
 
@@ -111,15 +111,35 @@ class QueueRunner:
                 entry["status"] = "error"
                 entry["error"] = str(exc)
                 self._markdown.pop(file_id, None)
+                # El zip entero falló: lo que seguía pendiente no se llegó a
+                # intentar, pero para el usuario el resultado es el mismo.
+                for member in entry.get("zip_contents") or []:
+                    if member["status"] == "pending":
+                        member["status"] = "error"
                 logger.warning("⚠️ %s: %s", entry["name"], exc)
-                self._emit("item:error", {"id": file_id, "error": str(exc)})
+                self._emit(
+                    "item:error",
+                    {"id": file_id, "error": str(exc), "zip_contents": entry.get("zip_contents")},
+                )
             else:
                 done += 1
                 entry["status"] = "done"
                 entry["error"] = None
                 self._markdown[file_id] = markdown
+                if entry.get("zip_contents"):
+                    included = included_zip_members(markdown)
+                    for member in entry["zip_contents"]:
+                        if member["status"] == "pending":
+                            member["status"] = "done" if member["path"] in included else "error"
                 logger.info("✅ %s convertido (%d caracteres)", entry["name"], len(markdown))
-                self._emit("item:done", {"id": file_id, "chars": len(markdown)})
+                self._emit(
+                    "item:done",
+                    {
+                        "id": file_id,
+                        "chars": len(markdown),
+                        "zip_contents": entry.get("zip_contents"),
+                    },
+                )
 
             # `completed` acá es "procesados" (convertidos + fallidos), que es lo
             # que hace avanzar la barra general hasta el final.

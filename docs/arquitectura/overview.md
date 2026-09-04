@@ -25,7 +25,7 @@ graph TD;
 | Módulo | Responsabilidad |
 |---|---|
 | `app/config.py` | Nombre, versión, tamaños y extensiones. **Fuente única de verdad**: lo leen `main.py`, `api.py`, `build.spec` y `pyproject.toml`. |
-| `app/converter.py` | Único punto que conoce markitdown. Traduce excepciones a mensajes en español. |
+| `app/converter.py` | Único punto que conoce markitdown. Traduce excepciones a mensajes en español; también sabe interpretar el resultado de un `.zip` (`included_zip_members`) para reconciliar el estado de cada archivo interno. |
 | `app/queue_runner.py` | Hilo de conversión serial y emisión de eventos. |
 | `app/api.py` | Superficie expuesta al JavaScript. Dueña del estado de la cola. |
 | `app/settings.py` | Preferencias mínimas en disco (`settings.json`). Hoy: la última carpeta de guardado. |

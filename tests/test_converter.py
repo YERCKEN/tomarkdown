@@ -12,7 +12,7 @@ from markitdown import (
 )
 
 from app import converter
-from app.converter import ConversionError, convert
+from app.converter import ConversionError, convert, included_zip_members
 
 # ----------------------------------------------------------- conversión real
 
@@ -150,3 +150,20 @@ def test_resultado_sin_texto_da_error(monkeypatch):
 
     with pytest.raises(ConversionError, match="no tiene texto"):
         convert("/x/vacío.txt")
+
+
+# ------------------------------------------------------------ included_zip_members
+
+
+def test_included_zip_members_con_varias_secciones():
+    markdown = (
+        "Content from the zip file `informe.zip`:\n\n"
+        "## File: docs/readme.txt\n\ncontenido\n\n"
+        "## File: data/informe.csv\n\na,b,c\n"
+    )
+
+    assert included_zip_members(markdown) == {"docs/readme.txt", "data/informe.csv"}
+
+
+def test_included_zip_members_sin_secciones():
+    assert included_zip_members("Content from the zip file `vacío.zip`:\n\n") == set()

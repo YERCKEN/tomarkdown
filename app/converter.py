@@ -7,6 +7,7 @@ devuelve el Markdown o levanta `ConversionError` con un mensaje legible.
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 from markitdown import (
@@ -17,6 +18,11 @@ from markitdown import (
 )
 
 logger = logging.getLogger(__name__)
+
+#: `ZipConverter` (markitdown) arma cada archivo incluido como una sección
+#: `## File: <nombre>`. Formato fijo de la librería, verificado leyendo su
+#: código instalado (`markitdown/converters/_zip_converter.py`).
+_ZIP_MEMBER_RE = re.compile(r"^## File: (.+)$", re.MULTILINE)
 
 #: Instancia única. Crear un `MarkItDown` por archivo reconstruye el registro de
 #: converters y el modelo de magika en cada llamada.
@@ -78,3 +84,16 @@ def convert(path: str) -> str:
         raise ConversionError("El archivo se leyó pero no tiene texto que convertir")
 
     return markdown
+
+
+def included_zip_members(markdown: str) -> set[str]:
+    """Nombres de archivo que sí aparecen en el resultado de un `.zip` convertido.
+
+    `ZipConverter` (markitdown) arma cada archivo incluido como una sección
+    `## File: <nombre>`; lo que se omitió por formato no soportado o por
+    fallar su propia conversión simplemente no aparece ahí.
+
+    :param markdown: El resultado de convertir un `.zip` con `convert()`.
+    :returns: Los nombres (rutas dentro del zip) que sí se incluyeron.
+    """
+    return {match.group(1).strip() for match in _ZIP_MEMBER_RE.finditer(markdown)}
