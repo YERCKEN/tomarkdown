@@ -25,6 +25,12 @@ jobs:
       - name: Instalar dependencias
         run: uv sync --extra dev
 
+      - name: Lint
+        run: uv run ruff check --output-format=github .
+
+      - name: Formato
+        run: uv run ruff format --check .
+
       - name: Pruebas
         run: uv run pytest
 
