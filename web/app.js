@@ -153,13 +153,13 @@ function statusMarkup(file) {
   switch (file.status) {
     case 'converting':
       return `<span class="sweep-dot"></span>
-        <span class="text-[12.5px] text-ink-muted">convirtiendo</span>`;
+        <span class="status-chip status-chip--converting">convirtiendo</span>`;
 
     // Guardado no es una etiqueta que informe un hecho consumado: es la puerta
     // al archivo en el disco.
     case 'done':
       if (file.saved_to) {
-        return `${ICON_OK}${rowButton({
+        return `<span class="status-chip status-chip--done">${ICON_OK}listo</span>${rowButton({
           action: 'reveal',
           id: file.id,
           iconName: 'folderOpen',
@@ -167,7 +167,7 @@ function statusMarkup(file) {
           loading: false,
         })}`;
       }
-      return `${ICON_OK}${rowButton({
+      return `<span class="status-chip status-chip--done">${ICON_OK}listo</span>${rowButton({
         action: 'save',
         id: file.id,
         iconName: 'download',
@@ -176,14 +176,14 @@ function statusMarkup(file) {
       })}`;
 
     case 'error':
-      return `${ICON_ERR}<span class="truncate text-[12.5px] text-danger"
-        title="${esc(file.error)}">${esc(file.error)}</span>`;
+      return `<span class="status-chip status-chip--error truncate" title="${esc(file.error)}"
+        >${ICON_ERR}${esc(file.error)}</span>`;
 
     case 'cancelled':
-      return `<span class="text-[12.5px] text-ink-dim">cancelado</span>`;
+      return `<span class="status-chip status-chip--pending">cancelado</span>`;
 
     default:
-      return `<span class="text-[12.5px] text-ink-dim">en espera</span>`;
+      return `<span class="status-chip status-chip--pending">en espera</span>`;
   }
 }
 
@@ -193,6 +193,7 @@ function buildRow(file) {
   row.className =
     'flex items-center gap-3 border-b border-line-soft px-5 py-2.5 transition-colors duration-150';
   if (file.status === 'converting') row.classList.add('row-active');
+  else if (file.status === 'done') row.classList.add('row-done');
 
   row.innerHTML = `
     <span class="ext-badge">${esc(file.ext)}</span>
