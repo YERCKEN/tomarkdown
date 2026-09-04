@@ -158,20 +158,21 @@ function statusMarkup(file) {
     // Guardado no es una etiqueta que informe un hecho consumado: es la puerta
     // al archivo en el disco.
     case 'done':
-      if (file.saved_to) {
-        return `<span class="status-chip status-chip--done">${ICON_OK}listo</span>${rowButton({
-          action: 'reveal',
-          id: file.id,
-          iconName: 'folderOpen',
-          label: REVEAL_LABEL,
-          loading: false,
-        })}`;
-      }
-      return `<span class="status-chip status-chip--done">${ICON_OK}listo</span>${rowButton({
+      return `<span class="status-chip status-chip--done">${ICON_OK}listo</span>${
+        file.saved_to
+          ? rowButton({
+              action: 'reveal',
+              id: file.id,
+              iconName: 'folderOpen',
+              label: REVEAL_LABEL,
+              loading: false,
+            })
+          : ''
+      }${rowButton({
         action: 'save',
         id: file.id,
         iconName: 'download',
-        label: 'Guardar como…',
+        label: file.saved_to ? 'Guardar de nuevo' : 'Guardar como…',
         loading: Boolean(file.saving),
       })}`;
 
