@@ -282,14 +282,34 @@ function showNotice(text) {
   }, 8000);
 }
 
-function reportRejected(names) {
-  if (!names || names.length === 0) return;
-  const list = names.slice(0, 3).join(', ');
+/** Enumera hasta 3 nombres y resume el resto: «a, b, c y 2 más». */
+function nameList(names) {
+  const head = names.slice(0, 3).join(', ');
   const rest = names.length > 3 ? ` y ${names.length - 3} más` : '';
-  const plural = names.length === 1 ? 'Este formato no' : 'Estos formatos no';
-  showNotice(`${plural} se puede convertir: ${list}${rest}. Formatos admitidos: ${
-    state.supported.join(', ')
-  }.`);
+  return `${head}${rest}`;
+}
+
+/**
+ * Aviso de lo que quedó afuera al soltar o elegir archivos. `names` son
+ * archivos con formato no soportado; `folders` son carpetas (que no se
+ * convierten). Cualquiera de los dos puede venir vacío o ausente.
+ */
+function reportRejected(names, folders) {
+  const parts = [];
+
+  if (folders && folders.length > 0) {
+    const plural = folders.length === 1 ? 'Esta carpeta no' : 'Estas carpetas no';
+    parts.push(`${plural} se puede convertir: ${nameList(folders)}. Soltá los archivos que tiene adentro.`);
+  }
+
+  if (names && names.length > 0) {
+    const plural = names.length === 1 ? 'Este formato no' : 'Estos formatos no';
+    parts.push(
+      `${plural} se puede convertir: ${nameList(names)}. Formatos admitidos: ${state.supported.join(', ')}.`,
+    );
+  }
+
+  if (parts.length > 0) showNotice(parts.join(' '));
 }
 
 // ------------------------------------------------------- eventos desde Python
@@ -307,7 +327,7 @@ window.toMarkdown = {
         return;
 
       case 'files:rejected':
-        reportRejected(payload.names);
+        reportRejected(payload.names, payload.folders);
         return;
 
       case 'queue:start':
