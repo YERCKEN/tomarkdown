@@ -9,6 +9,10 @@ líneas pasan a una sección con número y fecha.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-09
+
+Primera versión de producción. Verificada en macOS (Apple Silicon) y Windows 11.
+
 ### Added
 
 - Soltar (o elegir) una **carpeta** ahora avisa en vez de ignorarla en silencio;
@@ -52,6 +56,9 @@ líneas pasan a una sección con número y fecha.
   rojo sutil (antes quedaba pegado, sin ningún acento visual).
 - Las notas de cada release salen de la sección del `CHANGELOG` (más un link al
   `compare`), no del autogenerador de GitHub.
+- El release se publica al mergear a `main` (antes: al pushear un tag `v*`).
+  `main` es la rama de producción (= último release), `develop` la de
+  integración. El workflow crea el tag `vX.Y.Z` desde `__version__`.
 
 ### Fixed
 
@@ -65,6 +72,13 @@ líneas pasan a una sección con número y fecha.
   y `save_all` (fixture `fake_window`). Nuevo `test_settings.py`.
 - Nuevo `test_clipboard.py`: dispatch por plataforma y manejo de errores del
   portapapeles nativo.
+
+### Known limitations
+
+- El binario de macOS es solo para Apple Silicon.
+- Ni el `.app` ni el `.exe` están firmados con una cuenta de desarrollador, así
+  que la primera vez el SO avisa (ver la
+  [guía de instalación](docs/guias/instalacion.md)).
 
 ## [0.2.0] - 2026-09-03
 
@@ -124,6 +138,7 @@ Primera versión publicada.
 - El binario de macOS es solo para Apple Silicon.
 - Ni el `.app` ni el `.exe` están firmados con una cuenta de desarrollador.
 
-[Unreleased]: https://github.com/YERCKEN/tomarkdown/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/YERCKEN/tomarkdown/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/YERCKEN/tomarkdown/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/YERCKEN/tomarkdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/YERCKEN/tomarkdown/releases/tag/v0.1.0
