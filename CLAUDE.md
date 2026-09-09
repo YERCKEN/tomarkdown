@@ -34,14 +34,15 @@ uv run pytest -k cancel                             # por nombre
 uv run pytest -x --lf                               # frena en el primer fallo / solo los que fallaron
 ```
 
-`ci.yml` corre `pytest` en cada push a `develop`/`main` y en cada PR.
+`ci.yml` corre `ruff` + `pytest` + `--self-check` (sin empaquetar) en cada push a
+`develop`/`main` y en cada PR.
 
 Aparte, `--self-check` importa los módulos de los converters (`CONVERTER_IMPORTS`
 en `config.py`, lo que va a `hiddenimports`) y convierte una muestra sin abrir la
 ventana; `scripts/gen_selfcheck_samples.py` arma una carpeta con un archivo
-mínimo de cada formato pesado. CI lo corre sobre el binario ya empaquetado.
-`build.yml` en un tag: validar versión → `pytest` → empaquetar → generar
-muestras → `--self-check <carpeta>`.
+mínimo de cada formato pesado. `build.yml` lo corre sobre el binario ya
+empaquetado: `check` (lee `__version__`) → `pytest` → empaquetar → generar
+muestras → `--self-check <carpeta>` → (si hay versión nueva) tag + release.
 
 ### Front (solo si tocas el CSS)
 
@@ -63,12 +64,17 @@ uv run pyinstaller --noconfirm build.spec
 
 macOS → `dist/ToMarkdown.app` (onedir dentro de un `.app`). Windows →
 `dist/ToMarkdown.exe` (onefile). PyInstaller no hace cross-compile: cada binario
-sale de su plataforma, por eso CI usa matriz `macos-latest` + `windows-latest` y
-dispara con tags `v*`. El runner de macOS es Apple Silicon: no hay build Intel.
+sale de su plataforma, por eso CI usa matriz `macos-latest` + `windows-latest`.
+El runner de macOS es Apple Silicon: no hay build Intel.
 
-Para el release, `build.yml` empaqueta el `.app` en un `.dmg` (`hdiutil` + alias
-a `/Applications`) y el `.exe` en un instalador de Inno Setup
-(`packaging/windows/installer.iss`), más un zip portable del `.exe`.
+**Modelo de ramas:** `develop` es integración, `main` es producción (lo que hay
+en `main` **es** el último release). El release se dispara al **mergear a
+`main`**: `build.yml` lee `__version__` de `config.py` y, si no existe el tag
+`vX.Y.Z`, empaqueta el `.app` en un `.dmg` (`hdiutil` + alias a `/Applications`)
+y el `.exe` en un instalador de Inno Setup (`packaging/windows/installer.iss`)
+más un zip portable, crea el tag y publica el release con las notas de la
+sección `[X.Y.Z]` del `CHANGELOG`. `main` está protegida: solo entra por PR.
+Paso a paso en [`docs/guias/verificar-el-release.md`](docs/guias/verificar-el-release.md).
 
 ### Verificar un bundle
 
@@ -186,5 +192,6 @@ el archivo soltado y el usuario se sale de la app.
   **sin trailer de co-autor**.
 - **Changelog**: cada cambio relevante suma una línea a `[Unreleased]` en
   [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog + SemVer). `scripts/bump_version.py`
-  crea el commit y el tag de release; mover `[Unreleased]` a la sección con
+  sube `__version__` y hace el commit `chore: release vX.Y.Z` (no taggea, eso lo
+  hace `build.yml` al mergear a `main`); mover `[Unreleased]` a la sección con
   número queda a mano.

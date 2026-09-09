@@ -133,14 +133,13 @@ echo $LASTEXITCODE   # PowerShell
 en cada push a `develop`/`main` y en cada pull request: un test roto queda en
 rojo antes de mergear.
 
-[`.github/workflows/build.yml`](../../.github/workflows/build.yml) corre, en cada
-tag `v*` y en cada runner de la matriz (`macos-latest`, `windows-latest`):
+[`.github/workflows/build.yml`](../../.github/workflows/build.yml) corre al
+mergear a `main` (y a mano con `workflow_dispatch`), en cada runner de la matriz
+(`macos-latest`, `windows-latest`):
 
-1. En un tag, valida que el nombre (sin la `v`) coincide con
-   `app.config.__version__`.
-2. `uv run pytest` — antes de empaquetar.
-3. `pyinstaller --noconfirm build.spec`.
-4. `--self-check` del binario recién construido contra la carpeta de muestras
+1. `uv run pytest` — antes de empaquetar.
+2. `pyinstaller --noconfirm build.spec`.
+3. `--self-check` del binario recién construido contra la carpeta de muestras
    que arma `scripts/gen_selfcheck_samples.py`.
 
 Si cualquiera falla, no se publica el release.
