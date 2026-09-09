@@ -329,3 +329,72 @@ def test_save_all_recuerda_la_carpeta(tmp_path, fake_window):
 
     _, kwargs = fake_window.dialog_calls[0]
     assert kwargs["directory"] == str(destino)
+
+
+# --------------------------------------------------------------------- reveal
+
+
+def _saved_entry(api, tmp_path, name="informe.md"):
+    """Entrada `done` con `saved_to` apuntando a un archivo real en `tmp_path`."""
+    target = tmp_path / name
+    target.write_text("# hola", encoding="utf-8")
+    api._entries["r1"] = {
+        "id": "r1",
+        "name": name,
+        "path": f"/origen/{name}",
+        "ext": "md",
+        "size_bytes": 0,
+        "status": "done",
+        "error": None,
+        "saved_to": str(target),
+    }
+    return "r1", str(target)
+
+
+def test_reveal_windows_pasa_el_comando_como_string(tmp_path, fake_window, monkeypatch):
+    api = Api()
+    api.attach(fake_window)
+    file_id, target = _saved_entry(api, tmp_path)
+    calls: list = []
+    monkeypatch.setattr("app.api.subprocess.run", lambda cmd, **kw: calls.append(cmd))
+    monkeypatch.setattr("app.api.sys.platform", "win32")
+
+    assert api.reveal(file_id) is True
+    # Un string, no una lista: `explorer` ignora /select, si la ruta le llega
+    # entrecomillada entera (lo que hace subprocess con una lista y espacios).
+    assert isinstance(calls[0], str)
+    assert calls[0].startswith('explorer /select,"')
+    assert target in calls[0]
+
+
+def test_reveal_macos_pasa_una_lista(tmp_path, fake_window, monkeypatch):
+    api = Api()
+    api.attach(fake_window)
+    file_id, target = _saved_entry(api, tmp_path)
+    calls: list = []
+    monkeypatch.setattr("app.api.subprocess.run", lambda cmd, **kw: calls.append(cmd))
+    monkeypatch.setattr("app.api.sys.platform", "darwin")
+
+    assert api.reveal(file_id) is True
+    assert calls[0] == ["open", "-R", target]
+
+
+def test_reveal_sin_archivo_no_abre_el_explorador(tmp_path, fake_window, monkeypatch):
+    api = Api()
+    api.attach(fake_window)
+    api._entries["r1"] = {
+        "id": "r1",
+        "name": "informe.md",
+        "path": "/origen/informe.md",
+        "ext": "md",
+        "size_bytes": 0,
+        "status": "done",
+        "error": None,
+        "saved_to": str(tmp_path / "ya-no-esta.md"),
+    }
+    calls: list = []
+    monkeypatch.setattr("app.api.subprocess.run", lambda cmd, **kw: calls.append(cmd))
+
+    assert api.reveal("r1") is False
+    assert calls == []
+    assert fake_window.events_named("save:error")

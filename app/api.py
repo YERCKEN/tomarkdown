@@ -413,14 +413,22 @@ class Api:
             )
             return False
 
-        # Lista de argumentos y nunca `shell=True`: los nombres vienen del disco
-        # del usuario y traen espacios, comillas y acentos.
+        # Nunca `shell=True`: los nombres vienen del disco del usuario y traen
+        # espacios, comillas y acentos.
+        command: str | list[str]
         if sys.platform == "darwin":
             command = ["open", "-R", target]
-        elif os.name == "nt":
-            # `explorer` devuelve código 1 incluso cuando abre bien, por eso el
-            # resultado no se chequea en ninguna plataforma.
-            command = ["explorer", f"/select,{os.path.normpath(target)}"]
+        elif sys.platform == "win32":
+            # `explorer.exe` ignora el switch `/select,` si la ruta le llega
+            # entrecomillada entera, que es lo que hace `subprocess` con una
+            # lista cuando la ruta tiene un espacio (perfil `C:\Users\Nombre
+            # Apellido`, OneDrive, etc.): en ese caso abre la carpeta por
+            # defecto en vez de seleccionar el archivo. Como string, con
+            # comillas solo alrededor de la ruta, lo entiende. Windows no
+            # permite `"` en nombres de archivo, así que la interpolación es
+            # segura. `explorer` devuelve código 1 incluso cuando abre bien,
+            # por eso el resultado no se chequea en ninguna plataforma.
+            command = f'explorer /select,"{os.path.normpath(target)}"'
         else:
             command = ["xdg-open", os.path.dirname(target)]
 

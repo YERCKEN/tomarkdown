@@ -16,3 +16,6 @@ node_modules/
 
 # Se genera en el build (build.spec -> scripts/gen_licenses.py), no se versiona.
 /THIRD-PARTY-LICENSES.md
+
+# El .zip de samples se versiona; descomprimirlo para probar, no.
+/samples/proyecto-con-carpetas/
