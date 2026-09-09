@@ -1,29 +1,15 @@
-# Imágenes del README
+# Imágenes de la documentación
 
-Capturas de la interfaz para la sección de intro del [README](../../README.md).
-Faltan por hacer (issue [#14](https://github.com/YERCKEN/tomarkdown/issues/14)).
+Capturas usadas en el [README](../../README.md) y en la
+[guía de instalación](../guias/instalacion.md).
 
-## Qué falta
-
-| Archivo | Qué muestra |
+| Archivo | Dónde se usa |
 |---|---|
-| `cola-vacia.png` | La ventana recién abierta: la zona de arrastre grande con «Arrastra archivos aquí» y la lista de formatos. |
-| `convirtiendo.png` | La cola con varios archivos, uno en `convirtiendo` (con el barrido rojo) y la barra general a mitad de camino. |
-| `resultado.png` | La cola con todo en `done`, el botón «Guardar todo» activo. |
+| `app-empty-state.png` | README (hero) y guía de instalación: la ventana recién abierta. |
+| `queue-done-zip-tree.png` | README (hero): la cola convertida con el árbol de un `.zip` desplegado. |
+| `instalacion/macos-*.png` | Guía de instalación: montar el `.dmg`, el aviso de Gatekeeper, quitar la cuarentena. |
+| `instalacion/windows-*.jpg` | Guía de instalación: SmartScreen y el asistente de Inno Setup paso a paso. |
 
-## Cómo tomarlas
-
-- App real empaquetada o `uv run python -m app.main`, tema oscuro (es el único).
-- Ancho de ventana ~960 px (el default). Recortar al borde de la ventana, sin
-  fondo del escritorio.
-- PNG. Ideal ~1400-1900 px de ancho para que se vea nítida en la tabla de 3
-  columnas del README.
-- Contenido de ejemplo neutro (nombres de archivo genéricos, nada personal).
-
-## Cuando estén
-
-1. Dejarlas en esta carpeta con esos nombres exactos.
-2. Descomentar el bloque `TODO #14` en el README (arriba del `> [!NOTE]`).
-3. Borrar este archivo o dejar solo la nota de que ya están.
-
-Sin GIF: se decidió que alcanza con las tres capturas.
+Las capturas de la app se toman a ~960 px de ancho (el default de la ventana),
+tema oscuro, recortadas al borde de la ventana, y se bajan a ~1000 px con
+`sips --resampleWidth 1000` antes de commitear.
