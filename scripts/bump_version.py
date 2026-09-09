@@ -1,15 +1,14 @@
-"""Sube la version de ToMarkdown y deja el commit y el tag listos.
+"""Sube la version de ToMarkdown y deja el commit listo.
 
-`__version__` vive en `app/config.py` (lo lee hatchling). Subir version a mano es
-editar esa linea y taggear, sin garantia de que coincidan; `build.yml` aborta un
-tag que no case con `__version__`. Este script hace las dos cosas de una:
+`__version__` vive en `app/config.py` (lo lee hatchling, `build.spec` y la app).
+Este script:
 
 1. Reescribe `__version__` en `app/config.py` con el salto pedido.
-2. `git commit` de esa linea + `git tag -a vX.Y.Z` (anotado, para que
-   `git push --follow-tags` lo suba).
+2. `git commit` de esa linea.
 
-**No hace push**: eso lo decide la persona. Tampoco mueve `[Unreleased]` en
-`CHANGELOG.md`, solo lo recuerda.
+**No taggea ni pushea.** El tag lo crea `build.yml` al mergear a `main` (lee
+`__version__` y publica `vX.Y.Z` si todavia no existe). Este script tampoco
+mueve `[Unreleased]` en `CHANGELOG.md`, solo lo recuerda.
 
 Uso:
 
@@ -80,12 +79,6 @@ def _ensure_clean_tree() -> None:
         raise SystemExit("🔴 El arbol de trabajo tiene cambios sin commitear. Limpialo primero.")
 
 
-def _ensure_tag_free(tag: str) -> None:
-    existing = _git("tag", "--list", tag)
-    if existing:
-        raise SystemExit(f"🔴 El tag {tag} ya existe.")
-
-
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Sube la version y deja commit + tag.")
     parser.add_argument("part", choices=PARTS, help="Que parte de la version subir.")
@@ -98,22 +91,17 @@ def main(argv: list[str]) -> int:
     new = bump(current, args.part)
     tag = f"v{new}"
 
-    _ensure_tag_free(tag)
-
     CONFIG.write_text(replace_version(text, new), encoding="utf-8")
     _git("add", str(CONFIG.relative_to(REPO)))
     _git("commit", "-m", f"chore: release {tag}")
-    # Anotado, no lightweight: si no, `git push --follow-tags` no lo sube.
-    _git("tag", "-a", tag, "-m", f"Release {tag}")
 
     old = ".".join(str(n) for n in current)
     print(f"✅ {old} → {new}")
     print(f"   commit: chore: release {tag}")
-    print(f"   tag:    {tag}")
     print()
     print("Falta a mano:")
-    print(f"  · mover los cambios de [Unreleased] a [{new}] en CHANGELOG.md")
-    print(f"  · git push origin HEAD --follow-tags   (el tag {tag} dispara build.yml)")
+    print(f"  · mover los cambios de [Unreleased] a [{new}] en CHANGELOG.md (+ links del pie)")
+    print(f"  · PR de develop a main; al mergear, build.yml publica {tag}")
     return 0
 
 
