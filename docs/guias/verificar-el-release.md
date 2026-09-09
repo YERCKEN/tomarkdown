@@ -41,6 +41,12 @@ graph LR;
 
 Si el tag no coincide con `__version__`, el workflow aborta en el primer paso.
 
+> [!NOTE]
+> Las notas del release salen de la sección `[X.Y.Z]` del `CHANGELOG.md` (por eso
+> el paso de moverla desde `[Unreleased]` **antes** del tag), más un link
+> «Changelog completo» al `compare` con el tag anterior. No se usa el
+> autogenerador de GitHub.
+
 ---
 
 ## 2. Verificar en una máquina limpia

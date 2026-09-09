@@ -138,13 +138,37 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true
 
+      # Las notas salen del CHANGELOG que se mantiene a mano, no del
+      # autogenerador de GitHub (que lista PRs y arma un "New Contributors"
+      # sin sentido para un proyecto de una persona).
+      - name: Notas del release desde el CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { f = 1; next }
+            f && /^## \[/ { exit }
+            f { print }
+          ' CHANGELOG.md > release-notes.md
+
+          prev="$(git tag --list 'v*' --sort=-version:refname | grep -vFx "$GITHUB_REF_NAME" | head -1)"
+          if [ -n "$prev" ]; then
+            printf '\n**Changelog completo:** https://github.com/%s/compare/%s...%s\n' \
+              "$GITHUB_REPOSITORY" "$prev" "$GITHUB_REF_NAME" >> release-notes.md
+          fi
+
+          echo "--- notas ---"; cat release-notes.md
+
       - uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          body_path: release-notes.md
