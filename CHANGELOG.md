@@ -42,11 +42,20 @@ líneas pasan a una sección con número y fecha.
 - Carpeta `samples/` con documentos de ejemplo reales (un PDF con tablas, un
   Excel de miles de filas, un `.zip` con carpetas y un archivo no soportado)
   para pruebas manuales. Fuentes y licencias en `samples/README.md`.
+- Guía de instalación paso a paso con capturas
+  ([`docs/guias/instalacion.md`](docs/guias/instalacion.md)) y capturas de la
+  app en el README (#14).
 
 ### Changed
 
 - El aviso de archivos rechazados suma margen respecto del footer y un tinte
   rojo sutil (antes quedaba pegado, sin ningún acento visual).
+
+### Fixed
+
+- Windows: «Mostrar en el explorador» abría «Documentos» en vez de seleccionar
+  el `.md` guardado cuando la ruta tenía un espacio. `explorer /select,` va
+  como string, no como lista de argumentos.
 
 ### Tests
 

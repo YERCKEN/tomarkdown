@@ -82,12 +82,18 @@ solo manda el `id`.
 
 | Sistema | Comando |
 |---|---|
-| macOS | `open -R <archivo>` |
-| Windows | `explorer /select,<archivo>` |
-| Otros | `xdg-open <carpeta>` |
+| macOS | `open -R <archivo>` (lista de argumentos) |
+| Windows | `explorer /select,"<archivo>"` (**string**, no lista) |
+| Otros | `xdg-open <carpeta>` (lista de argumentos) |
 
-Se lanza con una lista de argumentos y nunca con `shell=True`: los nombres
-vienen del disco del usuario y traen espacios, comillas y acentos.
+Nunca con `shell=True`: los nombres vienen del disco del usuario y traen
+espacios, comillas y acentos.
+
+> [!NOTE]
+> En Windows el comando va como **string** y no como lista: `subprocess`
+> entrecomilla el argumento entero cuando la ruta tiene un espacio, y así
+> `explorer.exe` ignora el switch `/select,` y abre la carpeta por defecto en
+> vez de seleccionar el archivo.
 
 > [!NOTE]
 > El resultado del proceso no se comprueba en ninguna plataforma, porque
