@@ -136,4 +136,4 @@ licencia.
 
 ---
 
-Anterior: [Índice](../index.md) · Siguiente: [Pruebas](pruebas.md)
+Anterior: [Instalar ToMarkdown](instalacion.md) · Siguiente: [Pruebas](pruebas.md)

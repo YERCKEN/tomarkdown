@@ -7,14 +7,9 @@ Se instala, se abre con doble clic y se usa sin terminal, sin navegador y sin
 conexión a internet. Arrastras archivos (o los pegás con `Cmd+V`/`Ctrl+V`), ves
 la cola convertirse uno por uno y guardas los `.md` donde quieras.
 
-<!--
-TODO #14 — capturas de la UI. Especificación en docs/images/README.md.
-Cuando las tres imágenes estén en docs/images/, descomentar este bloque:
-
-| Cola vacía | Conversión en curso | Resultado |
-|---|---|---|
-| ![Cola vacía, con la zona de arrastre](docs/images/cola-vacia.png) | ![Cola con archivos convirtiéndose](docs/images/convirtiendo.png) | ![Cola con todo convertido, listo para guardar](docs/images/resultado.png) |
--->
+| Ventana vacía | Conversión terminada |
+|---|---|
+| ![Ventana de ToMarkdown recién abierta, con la zona de arrastre](docs/images/app-empty-state.png) | ![Cola con todo convertido y el árbol de un `.zip` desplegado](docs/images/queue-done-zip-tree.png) |
 
 > [!NOTE]
 > No es un servicio web. No hay backend HTTP propio, ni puertos expuestos hacia
@@ -60,7 +55,9 @@ un formato es tocar un solo diccionario.
 ## Instalación
 
 Descarga el archivo de tu plataforma desde la
-[página de releases](https://github.com/YERCKEN/tomarkdown/releases).
+[página de releases](https://github.com/YERCKEN/tomarkdown/releases). El
+**paso a paso con capturas** está en
+[Instalar ToMarkdown](docs/guias/instalacion.md).
 
 ### macOS
 
@@ -68,35 +65,20 @@ Descarga el archivo de tu plataforma desde la
 > El binario es solo para **Mac con Apple Silicon** (M1 o posterior). No hay
 > build para Intel.
 
-Monta `ToMarkdown-x.y.z.dmg` y arrastra `ToMarkdown.app` a la carpeta
-`Aplicaciones` (el `.dmg` trae el alias).
-
-> [!IMPORTANT]
-> El `.app` no está firmado con una cuenta de desarrollador de Apple, así que la
-> primera vez macOS muestra *«no se puede abrir porque proviene de un
-> desarrollador no identificado»*.
-
-Para abrirlo la primera vez, cualquiera de las dos:
-
-1. **Clic derecho** sobre `ToMarkdown.app` → **Abrir** → **Abrir** en el diálogo.
-   A partir de ahí funciona con doble clic normal.
-2. O quitar la marca de cuarentena desde la terminal:
-
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/ToMarkdown.app
-   ```
+Monta `ToMarkdown-x.y.z.dmg`, arrastra `ToMarkdown.app` a `Aplicaciones` (el
+`.dmg` trae el alias). El `.app` no está firmado, así que la primera vez macOS
+lo bloquea: **clic derecho → Abrir → Abrir**, o
+`xattr -dr com.apple.quarantine /Applications/ToMarkdown.app`.
 
 ### Windows
 
-Dos opciones:
-
 - **Instalador** (`ToMarkdown-Setup-x.y.z.exe`): instala en Archivos de
   programa, agrega acceso en el menú inicio y un desinstalador.
-- **Portable** (`ToMarkdown-x.y.z-portable.zip`): descomprime y ejecutá
+- **Portable** (`ToMarkdown-x.y.z-portable.zip`): descomprime y ejecuta
   `ToMarkdown.exe`, sin instalar nada.
 
-En ambos casos, al ser un binario sin firmar SmartScreen puede avisar:
-**Más información** → **Ejecutar de todas formas**.
+Al ser un binario sin firmar, SmartScreen avisa la primera vez:
+**Más información → Ejecutar de todas formas**.
 
 ### Verificar que la instalación quedó completa
 

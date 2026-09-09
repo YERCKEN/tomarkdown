@@ -18,6 +18,7 @@ entrada es el [README](../README.md).
 
 | Guía | Qué resuelve |
 |---|---|
+| [Instalar ToMarkdown](guias/instalacion.md) | Instalar el `.dmg` en macOS o el instalador / portable en Windows, paso a paso con capturas |
 | [Cambiar el icono de la app](guias/cambiar-el-icono.md) | Reemplazar el icono por defecto de PyInstaller en el `.app` y el `.exe` |
 | [Pruebas](guias/pruebas.md) | Cómo se corre `pytest`, qué cubre `tests/` y `--self-check`, y cómo agregar un test |
 | [Publicar y verificar un release](guias/verificar-el-release.md) | Cómo cortar un release con `bump_version.py` y el checklist de instalación en máquina limpia |
@@ -47,6 +48,7 @@ mindmap
       build.spec
       GitHub Actions
     Guías
+      Instalación
       Icono de la app
       Pruebas
       Publicar un release
