@@ -6,44 +6,60 @@ desarrollo, que el artefacto publicado se instala y funciona como dice el
 
 ---
 
+## El modelo de ramas
+
+- **`develop`**: integración. Todo lo nuevo entra acá (por PR).
+- **`main`**: producción. Lo que está en `main` **es** el último release.
+
+El release se dispara al mergear `develop` en `main`. No se taggea a mano: el
+workflow lee `__version__` de `app/config.py` y, si todavía no existe el tag
+`vX.Y.Z`, lo crea y publica. Mergear a `main` sin subir la versión no publica
+nada.
+
+---
+
 ## 1. Cortar el release
 
+En `develop`, con la suíte en verde:
+
 ```bash
-uv run pytest                                   # en verde
+uv run pytest
 uv run python scripts/bump_version.py minor     # major | minor | patch
 ```
 
-`bump_version.py` sube `__version__` en `app/config.py`, crea el commit
-`chore: release vX.Y.Z` y el tag `vX.Y.Z`. **No hace push.**
+`bump_version.py` sube `__version__` en `app/config.py` y hace el commit
+`chore: release vX.Y.Z`. **No taggea ni pushea.**
 
-Antes de empujar:
+Después, en el mismo commit:
 
 1. Mover los cambios de `[Unreleased]` a una sección `[X.Y.Z]` con la fecha en
-   [`CHANGELOG.md`](../../CHANGELOG.md) y sumar ese cambio al commit
-   (`git commit --amend --no-edit`).
-2. Empujar la rama y el tag:
+   [`CHANGELOG.md`](../../CHANGELOG.md), y actualizar los links del pie
+   (`[Unreleased]` y `[X.Y.Z]`). `git commit --amend --no-edit`.
+2. (Recomendado) dry-run de los binarios antes del PR:
 
    ```bash
-   git push origin HEAD --follow-tags
+   gh workflow run build.yml --ref develop     # o la rama release/*
    ```
 
-El tag `vX.Y.Z` dispara [`build.yml`](../../.github/workflows/build.yml):
+   Empaqueta las dos plataformas y corre `--self-check`, sin publicar. Bajar los
+   artefactos y probar la instalación en una máquina limpia (sección 2).
+3. Abrir un **PR de `develop` a `main`** y mergearlo.
+
+El merge a `main` dispara [`build.yml`](../../.github/workflows/build.yml):
 
 ```mermaid
 graph LR;
-    TAG["tag vX.Y.Z"] --> CHK["tag == __version__"];
+    MERGE["merge a main"] --> CHK["check<br/>__version__ sin tag?"];
     CHK --> TEST["pytest"];
     TEST --> PACK["pyinstaller"];
     PACK --> SELF["--self-check<br/>(carpeta de muestras)"];
     SELF --> ART["dmg · Setup.exe · zip portable"];
-    ART --> REL["release en GitHub"];
+    ART --> REL["tag vX.Y.Z + release en GitHub"];
 ```
-
-Si el tag no coincide con `__version__`, el workflow aborta en el primer paso.
 
 > [!NOTE]
 > Las notas del release salen de la sección `[X.Y.Z]` del `CHANGELOG.md` (por eso
-> el paso de moverla desde `[Unreleased]` **antes** del tag), más un link
+> el paso de moverla desde `[Unreleased]` **antes** del merge), más un link
 > «Changelog completo» al `compare` con el tag anterior. No se usa el
 > autogenerador de GitHub.
 
