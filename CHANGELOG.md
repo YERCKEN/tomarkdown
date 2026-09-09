@@ -39,6 +39,9 @@ líneas pasan a una sección con número y fecha.
   antes de convertir (según su extensión), y `listo`/`error` una vez que el
   zip entero termina (markitdown no expone progreso por archivo interno, así
   que es un salto de estado, no una barra en vivo).
+- Carpeta `samples/` con documentos de ejemplo reales (un PDF con tablas, un
+  Excel de miles de filas, un `.zip` con carpetas y un archivo no soportado)
+  para pruebas manuales. Fuentes y licencias en `samples/README.md`.
 
 ### Changed
 
