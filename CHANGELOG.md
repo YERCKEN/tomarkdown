@@ -50,6 +50,8 @@ líneas pasan a una sección con número y fecha.
 
 - El aviso de archivos rechazados suma margen respecto del footer y un tinte
   rojo sutil (antes quedaba pegado, sin ningún acento visual).
+- Las notas de cada release salen de la sección del `CHANGELOG` (más un link al
+  `compare`), no del autogenerador de GitHub.
 
 ### Fixed
 
