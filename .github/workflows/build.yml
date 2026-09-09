@@ -1,19 +1,57 @@
 name: Build
 
 # PyInstaller no hace cross compile: el .app sale de macOS y el .exe de Windows.
-# Se dispara con un tag v* (empaqueta y publica el release) o a mano desde la
-# pestaña Actions con "Run workflow" (empaqueta y valida, sin publicar).
+# Se dispara al mergear a `main` (empaqueta y, si `__version__` no tiene tag
+# todavía, publica el release) o a mano desde Actions con "Run workflow"
+# (empaqueta y valida, sin publicar).
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  # Rápido: lee __version__ y decide si hay que publicar. Un merge a main sin
+  # subir la versión no publica nada (el tag ya existe).
+  check:
+    name: Chequeo de versión
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.decide.outputs.version }}
+      release: ${{ steps.decide.outputs.release }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Decidir versión y si se publica
+        id: decide
+        shell: bash
+        run: |
+          version="$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' app/config.py)"
+          if [ -z "$version" ]; then
+            echo "::error::No se pudo leer __version__ de app/config.py"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Ejecución manual: se empaqueta pero no se publica."
+          elif git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::v$version ya está publicado, no se genera release."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Se va a publicar v$version."
+          fi
+
   build:
     name: ${{ matrix.label }}
+    needs: check
+    if: needs.check.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,21 +77,6 @@ jobs:
       - name: Instalar dependencias
         run: uv sync --extra dev
 
-      # En un tag, el nombre (sin la v) tiene que coincidir con app.config.__version__,
-      # que es lo que empaqueta hatchling y muestra la app. Si no, el binario
-      # saldría con una versión equivocada.
-      - name: Validar que el tag coincide con __version__
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          code="$(uv run python -c 'import app.config; print(app.config.__version__)')"
-          if [ "$tag" != "$code" ]; then
-            echo "::error::El tag $GITHUB_REF_NAME no coincide con __version__ ($code). Actualizá app/config.py o recreá el tag."
-            exit 1
-          fi
-          echo "✅ Tag $GITHUB_REF_NAME == __version__ $code"
-
       - name: Pruebas
         run: uv run pytest
 
@@ -78,11 +101,6 @@ jobs:
         if: runner.os == 'Windows'
         run: ./dist/ToMarkdown.exe --self-check "${{ runner.temp }}/samples"
 
-      - name: Leer la versión
-        id: version
-        shell: bash
-        run: echo "value=$(uv run python -c 'import app.config; print(app.config.__version__)')" >> "$GITHUB_OUTPUT"
-
       # macOS: un .dmg con alias a /Applications es lo que se espera para
       # instalar; el .app suelto dentro de un zip se descarta. Se arma con
       # hdiutil y no con create-dmg: este último posiciona los iconos con
@@ -90,7 +108,7 @@ jobs:
       - name: Empaquetar .dmg (macOS)
         if: runner.os == 'macOS'
         run: |
-          dmg="ToMarkdown-${{ steps.version.outputs.value }}.dmg"
+          dmg="ToMarkdown-${{ needs.check.outputs.version }}.dmg"
           staging="$(mktemp -d)"
           cp -R dist/ToMarkdown.app "$staging/"
           ln -s /Applications "$staging/Applications"
@@ -100,7 +118,7 @@ jobs:
       # de Inno Setup (Program Files, menú inicio, desinstalador).
       - name: Comprimir portable (Windows)
         if: runner.os == 'Windows'
-        run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ToMarkdown-${{ steps.version.outputs.value }}-portable.zip
+        run: Compress-Archive -Path dist/ToMarkdown.exe -DestinationPath ToMarkdown-${{ needs.check.outputs.version }}-portable.zip
 
       - name: Instalador (Windows)
         if: runner.os == 'Windows'
@@ -108,7 +126,7 @@ jobs:
         run: |
           choco install innosetup --no-progress -y
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
-            "/DAppVersion=${{ steps.version.outputs.value }}" `
+            "/DAppVersion=${{ needs.check.outputs.version }}" `
             packaging\windows\installer.iss
           # A la raíz del workspace: así el artefacto no anida un dir dist/ y
           # todos los assets del release quedan planos.
@@ -134,8 +152,8 @@ jobs:
 
   release:
     name: Publicar release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [check, build]
+    if: needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -151,24 +169,29 @@ jobs:
       # autogenerador de GitHub (que lista PRs y arma un "New Contributors"
       # sin sentido para un proyecto de una persona).
       - name: Notas del release desde el CHANGELOG
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v v="$version" '
+          awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" { f = 1; next }
             f && /^## \[/ { exit }
             f { print }
           ' CHANGELOG.md > release-notes.md
 
-          prev="$(git tag --list 'v*' --sort=-version:refname | grep -vFx "$GITHUB_REF_NAME" | head -1)"
+          # El tag v$VERSION todavía no existe (lo crea action-gh-release), así
+          # que el último tag es el release anterior.
+          prev="$(git tag --list 'v*' --sort=-version:refname | head -1)"
           if [ -n "$prev" ]; then
-            printf '\n**Changelog completo:** https://github.com/%s/compare/%s...%s\n' \
-              "$GITHUB_REPOSITORY" "$prev" "$GITHUB_REF_NAME" >> release-notes.md
+            printf '\n**Changelog completo:** https://github.com/%s/compare/%s...v%s\n' \
+              "$GITHUB_REPOSITORY" "$prev" "$VERSION" >> release-notes.md
           fi
 
           echo "--- notas ---"; cat release-notes.md
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.check.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: artifacts/*
           fail_on_unmatched_files: true
           body_path: release-notes.md

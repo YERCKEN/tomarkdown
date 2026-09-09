@@ -2,7 +2,7 @@ name: CI
 
 # Corre en cada push a develop/main y en cada pull request, para que un test
 # roto quede en rojo antes de mergear. El empaquetado y la publicación viven en
-# build.yml, que se dispara con tags v*.
+# build.yml, que se dispara al mergear a `main`.
 on:
   push:
     branches: [develop, main]
